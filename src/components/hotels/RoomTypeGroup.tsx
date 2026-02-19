@@ -61,7 +61,7 @@ export default function RoomTypeGroup({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-border overflow-hidden">
+    <div className="bg-white rounded-xl border border-border overflow-hidden transition-shadow duration-200 hover:shadow-md">
       {/* Header: image + room info side by side */}
       <div className="flex flex-col sm:flex-row">
         {/* Image — fixed aspect ratio, not stretching */}
@@ -210,7 +210,7 @@ export default function RoomTypeGroup({
               {/* CTA */}
               <button
                 onClick={() => onSelectRoom(rate.offerId)}
-                className="bg-accent hover:bg-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                className="bg-accent hover:bg-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer whitespace-nowrap active:scale-95"
               >
                 {t("chooseRoom")}
               </button>

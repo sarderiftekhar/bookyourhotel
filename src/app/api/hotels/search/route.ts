@@ -162,7 +162,12 @@ export async function POST(request: NextRequest) {
         latitude: (details.latitude as number | undefined) ?? loc?.latitude ?? loc?.lat,
         longitude: (details.longitude as number | undefined) ?? loc?.longitude ?? loc?.lng,
         main_photo: (details.main_photo as string | undefined) ?? (details.thumbnail as string | undefined),
-        hotelImages: (details.hotelImages as string[] | undefined),
+        hotelImages: Array.isArray(details.hotelImages)
+          ? (details.hotelImages as Array<{ url?: string; urlHd?: string } | string>)
+              .map((img) => typeof img === "string" ? img : (img.url || img.urlHd || ""))
+              .filter(Boolean)
+              .slice(0, 5)
+          : undefined,
         reviewScore: (details.rating as number | undefined) ?? (details.reviewScore as number | undefined),
         reviewCount: (details.reviewCount as number | undefined),
         minRate: minPrice,

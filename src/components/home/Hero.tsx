@@ -200,11 +200,11 @@ export default function Hero() {
                   }}
                 />
 
-                {/* Dark overlay — lets image show through at low opacity */}
+                {/* Dark overlay — subtle tint so city text + letter cutout stay readable */}
                 <div
                   className="absolute inset-0"
                   style={{
-                    backgroundColor: "rgba(8, 12, 30, 0.75)",
+                    backgroundColor: "rgba(8, 12, 30, 0.40)",
                     zIndex: 1,
                   }}
                 />
@@ -247,7 +247,7 @@ export default function Hero() {
                       transform: `translate3d(${diff / 15}px, -40%, 0)`,
                       transition: trans,
                               userSelect: "none",
-                      textShadow: "0 4px 40px rgba(0,0,0,0.3)",
+                      textShadow: "0 2px 20px rgba(0,0,0,0.5), 0 4px 60px rgba(0,0,0,0.3)",
                     }}
                   >
                     {slide.city}
@@ -257,8 +257,8 @@ export default function Hero() {
             ))}
           </div>
 
-          {/* Gradient overlays */}
-          <div className="absolute inset-0 bg-linear-to-b from-black/25 via-transparent to-black/50 pointer-events-none z-5" />
+          {/* Gradient overlays — stronger at bottom for text legibility */}
+          <div className="absolute inset-0 bg-linear-to-b from-black/10 via-transparent to-black/60 pointer-events-none z-5" />
 
           {/* Trust badge — prominent with slow pulse */}
           <div className="absolute top-5 right-5 sm:top-7 sm:right-7 z-15 opacity-0 animate-hero-badge">

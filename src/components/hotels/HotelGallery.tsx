@@ -94,14 +94,14 @@ export default function HotelGallery({ images, hotelName }: HotelGalleryProps) {
         <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center">
           <button
             onClick={() => setLightboxOpen(false)}
-            className="absolute top-4 right-4 z-10 p-2 text-white/80 hover:text-white bg-white/10 rounded-full"
+            className="absolute top-4 right-4 z-10 p-2 text-white/80 hover:text-white hover:bg-white/20 bg-white/10 rounded-full transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
           >
             <X size={24} />
           </button>
 
           <button
             onClick={prevImage}
-            className="absolute left-4 z-10 p-2 text-white/80 hover:text-white bg-white/10 rounded-full"
+            className="absolute left-4 z-10 p-2 text-white/80 hover:text-white hover:bg-white/20 bg-white/10 rounded-full transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
           >
             <ChevronLeft size={28} />
           </button>
@@ -118,7 +118,7 @@ export default function HotelGallery({ images, hotelName }: HotelGalleryProps) {
 
           <button
             onClick={nextImage}
-            className="absolute right-4 z-10 p-2 text-white/80 hover:text-white bg-white/10 rounded-full"
+            className="absolute right-4 z-10 p-2 text-white/80 hover:text-white hover:bg-white/20 bg-white/10 rounded-full transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
           >
             <ChevronRight size={28} />
           </button>

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { CalendarDays, Users } from "lucide-react";
+import { CalendarDays, Users, Search, Loader2, Minus, Plus } from "lucide-react";
 import { formatDate, getNightsCount } from "@/lib/utils";
 import RoomTypeGroup from "./RoomTypeGroup";
 
@@ -27,7 +27,14 @@ interface RoomSectionProps {
   checkOut: string;
   adults: number;
   children: number;
+  hotelName?: string;
   onSelectRoom: (offerId: string) => void;
+  onSearchChange?: (params: {
+    checkIn: string;
+    checkOut: string;
+    adults: number;
+    children: number;
+  }) => Promise<void>;
 }
 
 export default function RoomSection({
@@ -37,11 +44,20 @@ export default function RoomSection({
   checkOut,
   adults,
   children,
+  hotelName,
   onSelectRoom,
+  onSearchChange,
 }: RoomSectionProps) {
   const t = useTranslations("hotel");
   const [breakfastFilter, setBreakfastFilter] = useState(false);
   const [cancellationFilter, setCancellationFilter] = useState(false);
+
+  // Local form state
+  const [formCheckIn, setFormCheckIn] = useState(checkIn);
+  const [formCheckOut, setFormCheckOut] = useState(checkOut);
+  const [formAdults, setFormAdults] = useState(adults);
+  const [formChildren, setFormChildren] = useState(children);
+  const [searching, setSearching] = useState(false);
 
   const nights = getNightsCount(checkIn, checkOut);
 
@@ -75,6 +91,24 @@ export default function RoomSection({
     return Array.from(map.entries());
   }, [rooms, breakfastFilter, cancellationFilter]);
 
+  async function handleSearch() {
+    if (!onSearchChange || searching) return;
+    setSearching(true);
+    try {
+      await onSearchChange({
+        checkIn: formCheckIn,
+        checkOut: formCheckOut,
+        adults: formAdults,
+        children: formChildren,
+      });
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  // Get today's date as min for date inputs
+  const today = new Date().toISOString().split("T")[0];
+
   return (
     <div>
       <h2
@@ -84,24 +118,141 @@ export default function RoomSection({
         {t("chooseYourRoom")}
       </h2>
 
-      {/* Date / guest summary bar */}
-      <div className="flex flex-wrap items-center gap-4 mb-5 p-4 bg-bg-cream rounded-xl text-sm">
-        <div className="flex items-center gap-2 text-text-secondary">
-          <CalendarDays size={16} className="text-accent" />
-          <span>
-            {formatDate(checkIn, "MMM dd")} — {formatDate(checkOut, "MMM dd")}
-          </span>
-          <span className="text-text-muted">
-            ({nights} night{nights !== 1 ? "s" : ""})
-          </span>
+      {/* Inline search form */}
+      <div className="mb-5 p-5 bg-bg-cream/80 rounded-xl border border-border/40">
+        {hotelName && (
+          <p className="text-sm text-text-secondary mb-4">
+            {t("whenWouldYouStay", { name: hotelName })}
+          </p>
+        )}
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+          {/* Check-in */}
+          <div className="flex-1 min-w-0">
+            <label className="block text-xs font-semibold text-text-primary mb-1.5">
+              {t("checkInDate")}
+            </label>
+            <div className="relative">
+              <CalendarDays size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+              <input
+                type="date"
+                value={formCheckIn}
+                min={today}
+                onChange={(e) => {
+                  setFormCheckIn(e.target.value);
+                  // If check-out is before new check-in, auto-advance
+                  if (e.target.value >= formCheckOut) {
+                    const next = new Date(e.target.value);
+                    next.setDate(next.getDate() + 1);
+                    setFormCheckOut(next.toISOString().split("T")[0]);
+                  }
+                }}
+                className="w-full pl-9 pr-3 py-2.5 text-sm text-text-primary bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Check-out */}
+          <div className="flex-1 min-w-0">
+            <label className="block text-xs font-semibold text-text-primary mb-1.5">
+              {t("checkOutDate")}
+            </label>
+            <div className="relative">
+              <CalendarDays size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+              <input
+                type="date"
+                value={formCheckOut}
+                min={formCheckIn > today ? formCheckIn : today}
+                onChange={(e) => setFormCheckOut(e.target.value)}
+                className="w-full pl-9 pr-3 py-2.5 text-sm text-text-primary bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Adults */}
+          <div className="sm:w-32">
+            <label className="block text-xs font-semibold text-text-primary mb-1.5">
+              {t("adultsLabel")}
+            </label>
+            <div className="flex items-center gap-0 bg-white border border-border rounded-lg overflow-hidden">
+              <button
+                onClick={() => setFormAdults((v) => Math.max(1, v - 1))}
+                className="p-2.5 hover:bg-bg-cream transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                disabled={formAdults <= 1}
+              >
+                <Minus size={14} className="text-text-secondary" />
+              </button>
+              <span className="flex-1 text-center text-sm font-medium text-text-primary">
+                {formAdults}
+              </span>
+              <button
+                onClick={() => setFormAdults((v) => Math.min(9, v + 1))}
+                className="p-2.5 hover:bg-bg-cream transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                disabled={formAdults >= 9}
+              >
+                <Plus size={14} className="text-text-secondary" />
+              </button>
+            </div>
+          </div>
+
+          {/* Children */}
+          <div className="sm:w-32">
+            <label className="block text-xs font-semibold text-text-primary mb-1.5">
+              {t("childrenLabel")}
+            </label>
+            <div className="flex items-center gap-0 bg-white border border-border rounded-lg overflow-hidden">
+              <button
+                onClick={() => setFormChildren((v) => Math.max(0, v - 1))}
+                className="p-2.5 hover:bg-bg-cream transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                disabled={formChildren <= 0}
+              >
+                <Minus size={14} className="text-text-secondary" />
+              </button>
+              <span className="flex-1 text-center text-sm font-medium text-text-primary">
+                {formChildren}
+              </span>
+              <button
+                onClick={() => setFormChildren((v) => Math.min(6, v + 1))}
+                className="p-2.5 hover:bg-bg-cream transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                disabled={formChildren >= 6}
+              >
+                <Plus size={14} className="text-text-secondary" />
+              </button>
+            </div>
+          </div>
+
+          {/* Search button */}
+          <button
+            onClick={handleSearch}
+            disabled={searching || !formCheckIn || !formCheckOut || formCheckIn >= formCheckOut}
+            className="sm:w-auto px-5 py-2.5 bg-accent hover:bg-accent-hover text-white text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap active:scale-95"
+          >
+            {searching ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Search size={16} />
+            )}
+            {t("checkAvailability")}
+          </button>
         </div>
-        <div className="flex items-center gap-2 text-text-secondary">
-          <Users size={16} className="text-accent" />
-          <span>
-            {adults} adult{adults !== 1 ? "s" : ""}
-            {children > 0 && `, ${children} child${children !== 1 ? "ren" : ""}`}
-          </span>
-        </div>
+
+        {/* Current selection summary */}
+        {nights > 0 && (
+          <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-border/30 text-xs text-text-muted">
+            <span className="flex items-center gap-1.5">
+              <CalendarDays size={13} className="text-accent" />
+              {formatDate(checkIn, "MMM dd")} — {formatDate(checkOut, "MMM dd")}
+              <span className="text-text-muted">
+                ({nights} night{nights !== 1 ? "s" : ""})
+              </span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Users size={13} className="text-accent" />
+              {adults} adult{adults !== 1 ? "s" : ""}
+              {children > 0 && `, ${children} child${children !== 1 ? "ren" : ""}`}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Filter chips */}
@@ -129,7 +280,11 @@ export default function RoomSection({
       </div>
 
       {/* Room groups */}
-      {grouped.length > 0 ? (
+      {searching ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 size={28} className="animate-spin text-accent" />
+        </div>
+      ) : grouped.length > 0 ? (
         <div className="space-y-4">
           {grouped.map(([name, rates]) => (
             <RoomTypeGroup

@@ -72,7 +72,7 @@ export default function ReviewHighlights({
   const categories = useMemo(() => generateCategories(score), [score]);
 
   return (
-    <div className="bg-white rounded-xl border border-border p-6">
+    <div className="bg-white rounded-xl border border-border p-6 transition-shadow duration-300 hover:shadow-sm">
       <h2
         className="text-xl font-bold text-text-primary mb-5"
         style={{ fontFamily: "var(--font-playfair)" }}
@@ -104,7 +104,7 @@ export default function ReviewHighlights({
                 {pills.map((pill) => (
                   <span
                     key={pill}
-                    className="text-xs font-medium px-2.5 py-1 bg-accent/5 text-accent rounded-full"
+                    className="text-xs font-medium px-2.5 py-1 bg-accent/5 text-accent rounded-full transition-colors duration-200 hover:bg-accent/10"
                   >
                     {pill}
                   </span>

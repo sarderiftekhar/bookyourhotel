@@ -101,7 +101,7 @@ export default function RoomCard({ room, onSelect }: RoomCardProps) {
             </div>
             <button
               onClick={() => onSelect(room.offerId)}
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-accent text-white text-sm font-medium rounded-full hover:bg-accent-hover transition-colors"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-accent text-white text-sm font-medium rounded-full hover:bg-accent-hover transition-all duration-200 cursor-pointer active:scale-95"
             >
               {t("selectRoom")}
               <ChevronRight size={14} />

@@ -1,9 +1,10 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { MapPin, Star, Wifi, Heart } from "lucide-react";
+import { MapPin, Star, Wifi, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatCurrency, getStarRatingText } from "@/lib/utils";
 import { usePreferencesStore } from "@/store/preferencesStore";
 import { useSearchStore } from "@/store/searchStore";
@@ -17,21 +18,14 @@ interface HotelCardProps {
     city?: string;
     country?: string;
     main_photo?: string;
+    hotelImages?: string[];
     minRate?: number;
     currency?: string;
     reviewScore?: number;
     reviewCount?: number;
     boardName?: string;
     cancellationPolicy?: string;
-    description?: string;
   };
-}
-
-function getRatingColor(score: number) {
-  if (score >= 8.5) return "bg-accent";
-  if (score >= 7) return "bg-accent";
-  if (score >= 5) return "bg-accent-light";
-  return "bg-text-muted";
 }
 
 function getRatingLabel(score: number) {
@@ -52,23 +46,97 @@ export default function HotelCard({ hotel }: HotelCardProps) {
   const ratingLabel = hotel.reviewScore ? (getStarRatingText(hotel.reviewScore) || getRatingLabel(hotel.reviewScore)) : "";
   const isFreeCancellation = hotel.cancellationPolicy === "FREE_CANCELLATION";
 
+  // Build image list: main_photo first, then hotelImages (deduplicated)
+  const images: string[] = [];
+  if (hotel.main_photo) images.push(hotel.main_photo);
+  if (hotel.hotelImages) {
+    for (const img of hotel.hotelImages) {
+      if (img && !images.includes(img)) images.push(img);
+    }
+  }
+  const maxImages = Math.min(images.length, 5); // cap at 5 for performance
+  const carouselImages = images.slice(0, maxImages);
+  const hasCarousel = carouselImages.length > 1;
+
+  const [imgIdx, setImgIdx] = useState(0);
+  const [hovered, setHovered] = useState(false);
+
+  const goPrev = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setImgIdx((prev) => (prev === 0 ? carouselImages.length - 1 : prev - 1));
+  }, [carouselImages.length]);
+
+  const goNext = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setImgIdx((prev) => (prev === carouselImages.length - 1 ? 0 : prev + 1));
+  }, [carouselImages.length]);
+
   return (
     <Link
       href={`/hotel/${hotel.hotelId}?checkIn=${checkIn}&checkOut=${checkOut}`}
       className="group block min-w-0"
     >
-      <div className="bg-white rounded-3xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-0.5">
+      <div className="bg-white rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 border border-border/40">
         <div className="flex flex-col sm:flex-row min-w-0">
-          {/* Image */}
-          <div className="relative w-full sm:w-52 lg:w-64 h-52 sm:h-auto sm:min-h-[220px] shrink-0 overflow-hidden">
-            {hotel.main_photo ? (
-              <Image
-                src={hotel.main_photo}
-                alt={hotel.name}
-                fill
-                className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                sizes="(max-width: 640px) 100vw, 256px"
-              />
+          {/* Image Carousel */}
+          <div
+            className="relative w-full sm:w-52 lg:w-64 h-52 sm:h-auto sm:min-h-[220px] shrink-0 overflow-hidden"
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+          >
+            {carouselImages.length > 0 ? (
+              <>
+                {/* Stacked images — only active one is visible */}
+                {carouselImages.map((src, i) => (
+                  <Image
+                    key={i}
+                    src={src}
+                    alt={`${hotel.name} - ${i + 1}`}
+                    fill
+                    className={`object-cover transition-opacity duration-300 ${
+                      i === imgIdx ? "opacity-100" : "opacity-0"
+                    }`}
+                    sizes="(max-width: 640px) 100vw, 256px"
+                    priority={i === 0}
+                  />
+                ))}
+
+                {/* Prev/Next arrows — visible on hover */}
+                {hasCarousel && hovered && (
+                  <>
+                    <button
+                      onClick={goPrev}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-all z-10 cursor-pointer"
+                    >
+                      <ChevronLeft size={16} className="text-text-primary" />
+                    </button>
+                    <button
+                      onClick={goNext}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-all z-10 cursor-pointer"
+                    >
+                      <ChevronRight size={16} className="text-text-primary" />
+                    </button>
+                  </>
+                )}
+
+                {/* Dot indicators */}
+                {hasCarousel && (
+                  <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                    {carouselImages.map((_, i) => (
+                      <span
+                        key={i}
+                        className={`block rounded-full transition-all duration-200 ${
+                          i === imgIdx
+                            ? "w-2 h-2 bg-white"
+                            : "w-1.5 h-1.5 bg-white/60"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
               <div className="w-full h-full bg-linear-to-br from-accent/10 via-accent/5 to-bg-cream flex flex-col items-center justify-center gap-2">
                 <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
@@ -81,14 +149,14 @@ export default function HotelCard({ hotel }: HotelCardProps) {
             {/* Wishlist button */}
             <button
               onClick={(e) => e.preventDefault()}
-              className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 hover:bg-white hover:scale-110 flex items-center justify-center transition-all duration-200 shadow-md cursor-pointer active:scale-95"
+              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white hover:scale-110 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 z-10"
             >
-              <Heart size={18} className="text-text-muted hover:text-red-400 transition-colors" />
+              <Heart size={16} className="text-text-muted hover:text-red-400 transition-colors" />
             </button>
 
             {/* Free cancellation badge on image */}
             {isFreeCancellation && (
-              <div className="absolute bottom-3 left-3 bg-success/90 backdrop-blur-sm text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-md">
+              <div className="absolute bottom-3 left-3 bg-success/90 backdrop-blur-sm text-white text-[11px] font-bold px-3 py-1.5 rounded-full z-10">
                 {ts("freeCancellationLabel")}
               </div>
             )}
@@ -143,16 +211,9 @@ export default function HotelCard({ hotel }: HotelCardProps) {
                     </span>
                   )}
                 </div>
-
-                {/* Description snippet */}
-                {hotel.description && (
-                  <p className="text-sm text-text-secondary leading-relaxed mt-3 line-clamp-2">
-                    {hotel.description}
-                  </p>
-                )}
               </div>
 
-              {/* Right: Review score */}
+              {/* Right: Review score — full circle, light teal bg */}
               {hotel.reviewScore && hotel.reviewScore > 0 && (
                 <div className="text-right shrink-0 flex flex-col items-end gap-1">
                   <div className="flex items-center gap-2.5">
@@ -164,7 +225,7 @@ export default function HotelCard({ hotel }: HotelCardProps) {
                         </p>
                       )}
                     </div>
-                    <span className={`${getRatingColor(hotel.reviewScore)} text-white text-sm font-bold w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg`}>
+                    <span className="bg-accent-bright/15 text-accent text-sm font-bold w-11 h-11 rounded-full flex items-center justify-center">
                       {hotel.reviewScore.toFixed(1)}
                     </span>
                   </div>
@@ -185,7 +246,7 @@ export default function HotelCard({ hotel }: HotelCardProps) {
               )}
               <button
                 onClick={(e) => e.preventDefault()}
-                className="bg-accent hover:bg-accent-hover active:scale-95 text-white text-sm font-bold px-7 py-3 rounded-full transition-all duration-200 cursor-pointer shadow-lg shadow-accent/25 hover:shadow-xl hover:shadow-accent/30"
+                className="bg-accent hover:bg-accent-hover active:scale-95 text-white text-sm font-bold px-7 py-3 rounded-full transition-all duration-200 cursor-pointer"
               >
                 {ts("showPrices")}
               </button>

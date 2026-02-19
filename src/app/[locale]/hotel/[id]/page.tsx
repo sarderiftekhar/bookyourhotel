@@ -17,6 +17,7 @@ import {
   Bath,
   ParkingCircle,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   X,
   LocateFixed,
@@ -143,6 +144,14 @@ function HotelDetailPageInner() {
   const [mapOpen, setMapOpen] = useState(false);
   const [reviewSort, setReviewSort] = useState<"newest" | "highest" | "lowest">("newest");
   const [travelerFilter, setTravelerFilter] = useState<string | null>(null);
+  const [reviewPage, setReviewPage] = useState(1);
+  const REVIEWS_PER_PAGE = 6;
+
+  // Active search params for room section (can be updated by inline search)
+  const [activeCheckIn, setActiveCheckIn] = useState(searchParams.get("checkIn") || checkIn);
+  const [activeCheckOut, setActiveCheckOut] = useState(searchParams.get("checkOut") || checkOut);
+  const [activeAdults, setActiveAdults] = useState(adults);
+  const [activeChildren, setActiveChildren] = useState(children);
 
   const activeSection = useActiveSection(SECTION_IDS);
 
@@ -234,53 +243,7 @@ function HotelDetailPageInner() {
           setReviews(mapped);
         }
 
-        if (ratesData.data) {
-          const rateHotels = Array.isArray(ratesData.data) ? ratesData.data : [ratesData.data];
-          if (rateHotels.length > 0) {
-            const hotelRates = rateHotels[0] as Record<string, unknown>;
-            const roomTypes = (hotelRates.roomTypes || hotelRates.rooms || []) as Array<Record<string, unknown>>;
-            const parsedRooms: RoomData[] = [];
-
-            if (Array.isArray(roomTypes)) {
-              roomTypes.forEach((rt) => {
-                const offerId = rt.offerId as string;
-                const rates = (rt.rates || []) as Array<Record<string, unknown>>;
-                const offerRetail = rt.offerRetailRate as { amount?: number; currency?: string } | undefined;
-                const roomImages = (rt.images || []) as Array<{ url?: string; urlHd?: string } | string>;
-
-                const imgUrls: string[] = [];
-                if (Array.isArray(roomImages)) {
-                  roomImages.forEach((img) => {
-                    if (typeof img === "string") imgUrls.push(img);
-                    else if (img.urlHd) imgUrls.push(img.urlHd);
-                    else if (img.url) imgUrls.push(img.url);
-                  });
-                }
-
-                rates.forEach((rate) => {
-                  const retailTotal = (rate.retailRate as Record<string, unknown>)?.total as Array<{ amount: number; currency: string }> | undefined;
-                  const suggestedPrice = (rate.retailRate as Record<string, unknown>)?.suggestedSellingPrice as Array<{ amount: number; currency: string }> | undefined;
-                  const price = offerRetail?.amount ?? retailTotal?.[0]?.amount;
-                  const originalPrice = suggestedPrice?.[0]?.amount;
-                  const cur = offerRetail?.currency ?? retailTotal?.[0]?.currency ?? currency;
-
-                  parsedRooms.push({
-                    offerId: offerId || `room-${parsedRooms.length}`,
-                    roomName: (rate.name as string) || "Room",
-                    boardName: (rate.boardName as string) || (rate.boardType as string) || "Room Only",
-                    currency: cur,
-                    retailRate: price || 0,
-                    originalRate: originalPrice,
-                    maxOccupancy: (rate.maxOccupancy as number) || 2,
-                    images: imgUrls.length > 0 ? imgUrls : undefined,
-                    cancellationPolicy: rate.cancellationPolicies as RoomData["cancellationPolicy"],
-                  });
-                });
-              });
-            }
-            setRooms(parsedRooms);
-          }
-        }
+        setRooms(parseRatesResponse(ratesData));
       } catch (error) {
         console.error("Failed to load hotel:", error);
       } finally {
@@ -301,8 +264,8 @@ function HotelDetailPageInner() {
       hotelName: hotel.name,
       roomName: room.roomName,
       boardName: room.boardName,
-      checkIn: searchParams.get("checkIn") || checkIn,
-      checkOut: searchParams.get("checkOut") || checkOut,
+      checkIn: activeCheckIn,
+      checkOut: activeCheckOut,
       currency: room.currency,
       totalRate: room.retailRate,
       cancellationPolicy: room.cancellationPolicy?.refundableTag || "NON_REFUNDABLE",
@@ -321,7 +284,76 @@ function HotelDetailPageInner() {
     document.getElementById("section-reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function parseRatesResponse(ratesData: Record<string, unknown>): RoomData[] {
+    if (!ratesData.data) return [];
+    const rateHotels = Array.isArray(ratesData.data) ? ratesData.data : [ratesData.data];
+    if (rateHotels.length === 0) return [];
+
+    const hotelRates = rateHotels[0] as Record<string, unknown>;
+    const roomTypes = (hotelRates.roomTypes || hotelRates.rooms || []) as Array<Record<string, unknown>>;
+    const parsedRooms: RoomData[] = [];
+
+    if (Array.isArray(roomTypes)) {
+      roomTypes.forEach((rt) => {
+        const offerId = rt.offerId as string;
+        const rates = (rt.rates || []) as Array<Record<string, unknown>>;
+        const offerRetail = rt.offerRetailRate as { amount?: number; currency?: string } | undefined;
+        const roomImages = (rt.images || []) as Array<{ url?: string; urlHd?: string } | string>;
+
+        const imgUrls: string[] = [];
+        if (Array.isArray(roomImages)) {
+          roomImages.forEach((img) => {
+            if (typeof img === "string") imgUrls.push(img);
+            else if (img.urlHd) imgUrls.push(img.urlHd);
+            else if (img.url) imgUrls.push(img.url);
+          });
+        }
+
+        rates.forEach((rate) => {
+          const retailTotal = (rate.retailRate as Record<string, unknown>)?.total as Array<{ amount: number; currency: string }> | undefined;
+          const suggestedPrice = (rate.retailRate as Record<string, unknown>)?.suggestedSellingPrice as Array<{ amount: number; currency: string }> | undefined;
+          const price = offerRetail?.amount ?? retailTotal?.[0]?.amount;
+          const originalPrice = suggestedPrice?.[0]?.amount;
+          const cur = offerRetail?.currency ?? retailTotal?.[0]?.currency ?? currency;
+
+          parsedRooms.push({
+            offerId: offerId || `room-${parsedRooms.length}`,
+            roomName: (rate.name as string) || "Room",
+            boardName: (rate.boardName as string) || (rate.boardType as string) || "Room Only",
+            currency: cur,
+            retailRate: price || 0,
+            originalRate: originalPrice,
+            maxOccupancy: (rate.maxOccupancy as number) || 2,
+            images: imgUrls.length > 0 ? imgUrls : undefined,
+            cancellationPolicy: rate.cancellationPolicies as RoomData["cancellationPolicy"],
+          });
+        });
+      });
+    }
+    return parsedRooms;
+  }
+
+  async function handleRoomSearch(params: {
+    checkIn: string;
+    checkOut: string;
+    adults: number;
+    children: number;
+  }) {
+    const res = await fetch(
+      `/api/hotels/${hotelId}/rates?checkIn=${encodeURIComponent(params.checkIn)}&checkOut=${encodeURIComponent(params.checkOut)}&adults=${params.adults}&children=${params.children}&currency=${currency}`
+    );
+    const data = await res.json();
+    const newRooms = parseRatesResponse(data);
+    setRooms(newRooms);
+    setActiveCheckIn(params.checkIn);
+    setActiveCheckOut(params.checkOut);
+    setActiveAdults(params.adults);
+    setActiveChildren(params.children);
+  }
+
   const filteredReviews = useMemo(() => {
+    // Reset to page 1 whenever filters/sort change
+    setReviewPage(1);
     let result = [...reviews];
     if (travelerFilter) {
       result = result.filter((r) => r.type === travelerFilter);
@@ -342,6 +374,12 @@ function HotelDetailPageInner() {
     }
     return result;
   }, [reviews, reviewSort, travelerFilter]);
+
+  const totalReviewPages = Math.max(1, Math.ceil(filteredReviews.length / REVIEWS_PER_PAGE));
+  const paginatedReviews = filteredReviews.slice(
+    (reviewPage - 1) * REVIEWS_PER_PAGE,
+    reviewPage * REVIEWS_PER_PAGE
+  );
 
   const availableTravelerTypes = useMemo(() => {
     const types = new Set<string>();
@@ -373,8 +411,6 @@ function HotelDetailPageInner() {
   const isLongDesc = descriptionText.length > 400;
   const lowestPrice = rooms.length > 0 ? Math.min(...rooms.map((r) => r.retailRate)) : 0;
   const roomCurrency = rooms[0]?.currency || currency;
-  const ci = searchParams.get("checkIn") || checkIn;
-  const co = searchParams.get("checkOut") || checkOut;
 
   const tabSections: TabSection[] = [
     { id: "section-overview", label: "overview", icon: LayoutGrid },
@@ -438,7 +474,7 @@ function HotelDetailPageInner() {
                     <span className="text-border">&middot;</span>
                     <button
                       onClick={() => setMapOpen(true)}
-                      className="text-accent font-medium hover:text-accent-hover underline underline-offset-2 transition-colors"
+                      className="text-accent font-medium hover:text-accent-hover underline underline-offset-2 transition-colors cursor-pointer"
                     >
                       {t("showMap")}
                     </button>
@@ -459,7 +495,7 @@ function HotelDetailPageInner() {
             {hotel.reviewScore !== undefined && hotel.reviewCount !== undefined && hotel.reviewScore > 0 && (
               <button
                 onClick={scrollToReviews}
-                className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-accent/20 hover:bg-bg-cream/50 transition-colors cursor-pointer"
+                className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-accent/20 hover:bg-bg-cream/50 hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.98]"
               >
                 <div className="bg-accent text-white text-xl font-bold w-12 h-12 rounded-lg flex items-center justify-center">
                   {hotel.reviewScore.toFixed(1)}
@@ -479,7 +515,7 @@ function HotelDetailPageInner() {
               {quickAmenities.map(({ icon: Icon, label }) => (
                 <span
                   key={label}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-accent bg-accent/5 px-3 py-1.5 rounded-full"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-accent bg-accent/5 px-3 py-1.5 rounded-full transition-colors duration-200 hover:bg-accent/10"
                 >
                   <Icon size={13} />
                   {label}
@@ -507,6 +543,36 @@ function HotelDetailPageInner() {
             starRating={hotel.starRating}
             city={hotel.city}
           />
+        </div>
+
+        {/* Section: Property Description */}
+        <div id="section-description" className="scroll-mt-[130px] pt-10">
+          <div className="bg-white rounded-xl border border-border p-6 transition-shadow duration-200 hover:shadow-sm">
+            <h2
+              className="text-xl font-bold text-text-primary mb-5"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              {t("propertyDescription")}
+            </h2>
+            <div className="relative">
+              <div
+                className={`prose prose-sm text-text-secondary leading-relaxed max-w-none ${!descExpanded && isLongDesc ? "max-h-[250px] overflow-hidden" : ""}`}
+                dangerouslySetInnerHTML={{ __html: hotel.hotelDescription }}
+              />
+              {isLongDesc && !descExpanded && (
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-white to-transparent" />
+              )}
+            </div>
+            {isLongDesc && (
+              <button
+                onClick={() => setDescExpanded(!descExpanded)}
+                className="flex items-center gap-1 mt-3 text-sm font-medium text-accent hover:text-accent-hover transition-colors cursor-pointer"
+              >
+                {descExpanded ? t("showLess") : t("readMore")}
+                <ChevronDown size={14} className={`transition-transform ${descExpanded ? "rotate-180" : ""}`} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Section: Popular Facilities */}
@@ -549,11 +615,13 @@ function HotelDetailPageInner() {
           <RoomSection
             rooms={rooms}
             hotelImages={hotel.images}
-            checkIn={ci}
-            checkOut={co}
-            adults={adults}
-            children={children}
+            checkIn={activeCheckIn}
+            checkOut={activeCheckOut}
+            adults={activeAdults}
+            children={activeChildren}
+            hotelName={hotel.name}
             onSelectRoom={handleSelectRoom}
+            onSearchChange={handleRoomSearch}
           />
         </div>
 
@@ -590,14 +658,80 @@ function HotelDetailPageInner() {
                 onFilterChange={setTravelerFilter}
               />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredReviews.map((review, idx) => (
-                  <ReviewCard key={idx} review={review} />
+                {paginatedReviews.map((review, idx) => (
+                  <ReviewCard key={`${reviewPage}-${idx}`} review={review} />
                 ))}
               </div>
               {filteredReviews.length === 0 && (
                 <p className="text-text-muted text-center py-8">
                   No reviews match the selected filter.
                 </p>
+              )}
+
+              {/* Pagination */}
+              {totalReviewPages > 1 && (
+                <div className="flex items-center justify-center gap-1.5 mt-8">
+                  <button
+                    onClick={() => {
+                      setReviewPage((p) => Math.max(1, p - 1));
+                      document.getElementById("section-reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    disabled={reviewPage === 1}
+                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-bg-cream active:scale-95"
+                  >
+                    <ChevronLeft size={18} className="text-text-secondary" />
+                  </button>
+
+                  {Array.from({ length: totalReviewPages }, (_, i) => i + 1)
+                    .filter((p) => {
+                      // Show first, last, and pages near current
+                      if (p === 1 || p === totalReviewPages) return true;
+                      if (Math.abs(p - reviewPage) <= 1) return true;
+                      return false;
+                    })
+                    .reduce<(number | "ellipsis")[]>((acc, p, i, arr) => {
+                      if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("ellipsis");
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((item, i) =>
+                      item === "ellipsis" ? (
+                        <span key={`e-${i}`} className="w-9 h-9 flex items-center justify-center text-text-muted text-sm">
+                          &hellip;
+                        </span>
+                      ) : (
+                        <button
+                          key={item}
+                          onClick={() => {
+                            setReviewPage(item as number);
+                            document.getElementById("section-reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }}
+                          className={`w-9 h-9 rounded-full text-sm font-medium flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 ${
+                            reviewPage === item
+                              ? "bg-accent text-white"
+                              : "text-text-secondary hover:bg-bg-cream"
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      )
+                    )}
+
+                  <button
+                    onClick={() => {
+                      setReviewPage((p) => Math.min(totalReviewPages, p + 1));
+                      document.getElementById("section-reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    disabled={reviewPage === totalReviewPages}
+                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-bg-cream active:scale-95"
+                  >
+                    <ChevronRight size={18} className="text-text-secondary" />
+                  </button>
+
+                  <span className="ml-3 text-xs text-text-muted">
+                    {(reviewPage - 1) * REVIEWS_PER_PAGE + 1}–{Math.min(reviewPage * REVIEWS_PER_PAGE, filteredReviews.length)} of {filteredReviews.length}
+                  </span>
+                </div>
               )}
             </>
           ) : (
@@ -607,46 +741,10 @@ function HotelDetailPageInner() {
           )}
         </div>
 
-        {/* Section: Property Description */}
-        <div id="section-description" className="scroll-mt-[130px] pt-10">
-          <div className="max-w-4xl bg-white rounded-xl border border-border p-6">
-            <h2
-              className="text-xl font-bold text-text-primary mb-5"
-              style={{ fontFamily: "var(--font-playfair)" }}
-            >
-              {t("propertyDescription")}
-            </h2>
-            <div className="relative">
-              <div
-                className={`prose prose-sm text-text-secondary leading-relaxed max-w-none ${!descExpanded && isLongDesc ? "max-h-[250px] overflow-hidden" : ""}`}
-                dangerouslySetInnerHTML={{ __html: hotel.hotelDescription }}
-              />
-              {isLongDesc && !descExpanded && (
-                <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-white to-transparent" />
-              )}
-            </div>
-            {isLongDesc && (
-              <button
-                onClick={() => setDescExpanded(!descExpanded)}
-                className="flex items-center gap-1 mt-3 text-sm font-medium text-accent hover:text-accent-hover transition-colors cursor-pointer"
-              >
-                {descExpanded ? t("showLess") : t("readMore")}
-                <ChevronDown size={14} className={`transition-transform ${descExpanded ? "rotate-180" : ""}`} />
-              </button>
-            )}
-          </div>
-        </div>
-
         {/* Full Facilities */}
         {hotel.facilities.length > 0 && (
           <div id="facilities-full" className="scroll-mt-[130px] pt-10">
-            <h2
-              className="text-xl font-bold text-text-primary mb-5"
-              style={{ fontFamily: "var(--font-playfair)" }}
-            >
-              {t("amenities")}
-            </h2>
-            <AmenitiesList amenities={hotel.facilities} />
+            <AmenitiesList amenities={hotel.facilities} hotelName={hotel.name} />
           </div>
         )}
 
@@ -682,7 +780,7 @@ function HotelDetailPageInner() {
             {hotel.latitude !== 0 && hotel.longitude !== 0 && (
               <button
                 onClick={() => setMapOpen(true)}
-                className="text-sm font-medium text-accent hover:text-accent-hover transition-colors"
+                className="text-sm font-medium text-accent hover:text-accent-hover transition-colors cursor-pointer"
               >
                 {t("viewLargerMap")} &rarr;
               </button>
@@ -715,7 +813,7 @@ function HotelDetailPageInner() {
             </div>
             <button
               onClick={() => setMapOpen(false)}
-              className="p-2 rounded-lg hover:bg-bg-cream transition-colors shrink-0"
+              className="p-2 rounded-lg hover:bg-bg-cream transition-all duration-200 shrink-0 cursor-pointer hover:scale-110 active:scale-95"
             >
               <X size={20} className="text-text-secondary" />
             </button>
@@ -736,7 +834,7 @@ function HotelDetailPageInner() {
                 setMapOpen(false);
                 setTimeout(() => setMapOpen(true), 50);
               }}
-              className="absolute bottom-6 left-4 flex items-center gap-2 px-4 py-2.5 bg-white rounded-full shadow-lg border border-border text-sm font-medium text-text-primary hover:bg-bg-cream transition-colors"
+              className="absolute bottom-6 left-4 flex items-center gap-2 px-4 py-2.5 bg-white rounded-full shadow-lg border border-border text-sm font-medium text-text-primary hover:bg-bg-cream transition-all duration-200 cursor-pointer hover:shadow-xl active:scale-95"
             >
               <LocateFixed size={16} className="text-accent" />
               Re-center

@@ -153,7 +153,15 @@
     "readMore": "اقرأ المزيد",
     "showLess": "عرض أقل",
     "breadcrumbHome": "الرئيسية",
-    "breadcrumbHotels": "فنادق في {location}"
+    "breadcrumbHotels": "فنادق في {location}",
+    "facilitiesOfHotel": "مرافق {name}",
+    "mostPopularFacilities": "المرافق الأكثر شعبية",
+    "whenWouldYouStay": "متى ترغب في الإقامة في {name}؟",
+    "checkInDate": "تاريخ الوصول",
+    "checkOutDate": "تاريخ المغادرة",
+    "adultsLabel": "بالغون",
+    "childrenLabel": "أطفال",
+    "checkAvailability": "تحقق من التوفر"
   },
   "booking": {
     "checkout": "الدفع",

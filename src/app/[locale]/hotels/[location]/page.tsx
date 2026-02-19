@@ -22,6 +22,7 @@ interface HotelResult {
   city?: string;
   country?: string;
   main_photo?: string;
+  hotelImages?: string[];
   minRate?: number;
   currency?: string;
   reviewScore?: number;

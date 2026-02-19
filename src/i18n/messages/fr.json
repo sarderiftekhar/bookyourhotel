@@ -153,7 +153,15 @@
     "readMore": "Lire la suite",
     "showLess": "Afficher moins",
     "breadcrumbHome": "Accueil",
-    "breadcrumbHotels": "Hôtels à {location}"
+    "breadcrumbHotels": "Hôtels à {location}",
+    "facilitiesOfHotel": "Équipements de {name}",
+    "mostPopularFacilities": "Équipements les plus populaires",
+    "whenWouldYouStay": "Quand souhaitez-vous séjourner à {name} ?",
+    "checkInDate": "Date d'arrivée",
+    "checkOutDate": "Date de départ",
+    "adultsLabel": "Adultes",
+    "childrenLabel": "Enfants",
+    "checkAvailability": "Vérifier la disponibilité"
   },
   "booking": {
     "checkout": "Paiement",

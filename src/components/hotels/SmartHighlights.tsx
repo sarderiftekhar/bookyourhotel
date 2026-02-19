@@ -49,11 +49,11 @@ export default function SmartHighlights({
           return (
             <div
               key={idx}
-              className="rounded-xl bg-gradient-to-br from-accent-bright/30 via-accent-bright/10 to-star/20 p-[1px]"
+              className="rounded-xl bg-gradient-to-br from-accent-bright/30 via-accent-bright/10 to-star/20 p-[1px] transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
             >
               <div className="bg-white rounded-[11px] p-5 h-full">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-accent/8 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-lg bg-accent/8 flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:bg-accent/15">
                     <Icon size={20} className="text-accent" />
                   </div>
                   <div className="min-w-0">

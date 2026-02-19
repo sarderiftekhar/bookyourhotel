@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Wifi,
   Car,
@@ -38,7 +39,6 @@ import {
   DoorOpen,
   Users,
   Utensils,
-  ChevronDown,
   Check,
   type LucideIcon,
 } from "lucide-react";
@@ -46,6 +46,7 @@ import {
 interface AmenitiesListProps {
   amenities: string[];
   compact?: boolean;
+  hotelName?: string;
 }
 
 interface CategoryDef {
@@ -300,48 +301,8 @@ function categorizeAmenities(amenities: string[]) {
   return { highlights, categories };
 }
 
-function CategorySection({ cat }: { cat: { key: string; label: string; icon: LucideIcon; items: string[] } }) {
-  const [expanded, setExpanded] = useState(true);
-  const CatIcon = cat.icon;
-
-  return (
-    <div className="border border-border/60 rounded-xl overflow-hidden">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-5 py-4 bg-bg-cream/50 hover:bg-bg-cream transition-colors cursor-pointer"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-accent/8 flex items-center justify-center">
-            <CatIcon size={18} className="text-accent" />
-          </div>
-          <h3 className="text-[15px] font-semibold text-text-primary">
-            {cat.label}
-          </h3>
-          <span className="text-xs text-text-muted bg-white px-2 py-0.5 rounded-full">
-            {cat.items.length}
-          </span>
-        </div>
-        <ChevronDown
-          size={18}
-          className={`text-text-muted transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {expanded && (
-        <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
-          {cat.items.map((amenity) => (
-            <div key={amenity} className="flex items-center gap-2.5 py-1.5">
-              <Check size={14} className="text-accent-light shrink-0" />
-              <span className="text-sm text-text-secondary">{amenity}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function AmenitiesList({ amenities, compact }: AmenitiesListProps) {
+export default function AmenitiesList({ amenities, compact, hotelName }: AmenitiesListProps) {
+  const t = useTranslations("hotel");
   const { highlights, categories } = useMemo(() => categorizeAmenities(amenities), [amenities]);
 
   if (amenities.length === 0) {
@@ -352,7 +313,7 @@ export default function AmenitiesList({ amenities, compact }: AmenitiesListProps
     );
   }
 
-  // Compact mode — just the highlight grid (used on overview tab)
+  // Compact mode — just the highlight grid (used on overview/popular section)
   if (compact) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -361,7 +322,7 @@ export default function AmenitiesList({ amenities, compact }: AmenitiesListProps
           return (
             <div
               key={amenity}
-              className="flex items-center gap-3 px-4 py-3.5 bg-accent/4 border border-accent/10 rounded-xl"
+              className="flex items-center gap-3 px-4 py-3.5 bg-accent/4 border border-accent/10 rounded-xl transition-all duration-200 hover:bg-accent/8 hover:border-accent/20 hover:shadow-sm"
             >
               <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                 <Icon size={16} className="text-accent" />
@@ -374,33 +335,65 @@ export default function AmenitiesList({ amenities, compact }: AmenitiesListProps
     );
   }
 
+  // Full view — Booking.com-style clean layout
   return (
-    <div className="space-y-6">
-      {/* Top highlights — key amenities at a glance */}
+    <div>
+      {/* Section heading */}
+      <h2
+        className="text-xl font-bold text-text-primary mb-6"
+        style={{ fontFamily: "var(--font-playfair)" }}
+      >
+        {hotelName ? t("facilitiesOfHotel", { name: hotelName }) : t("facilities")}
+      </h2>
+
+      {/* Most popular facilities — pill row */}
       {highlights.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {highlights.map((amenity) => {
-            const Icon = getAmenityIcon(amenity);
-            return (
-              <div
-                key={amenity}
-                className="flex items-center gap-3 px-4 py-3.5 bg-accent/4 border border-accent/10 rounded-xl"
-              >
-                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                  <Icon size={16} className="text-accent" />
-                </div>
-                <span className="text-sm font-medium text-text-primary leading-tight">{amenity}</span>
-              </div>
-            );
-          })}
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-text-primary mb-3">
+            {t("mostPopularFacilities")}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {highlights.map((amenity) => {
+              const Icon = getAmenityIcon(amenity);
+              return (
+                <span
+                  key={amenity}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-text-primary bg-bg-cream border border-border/60 px-3.5 py-2 rounded-full transition-colors duration-200 hover:border-accent/30 hover:bg-accent/5"
+                >
+                  <Icon size={14} className="text-accent shrink-0" />
+                  {amenity}
+                </span>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* Category sections */}
-      <div className="space-y-3">
-        {categories.map((cat) => (
-          <CategorySection key={cat.key} cat={cat} />
-        ))}
+      {/* Category grid — flat 3-column layout */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-7">
+        {categories.map((cat) => {
+          const CatIcon = cat.icon;
+          return (
+            <div key={cat.key}>
+              {/* Category header */}
+              <div className="flex items-center gap-2.5 mb-3">
+                <CatIcon size={18} className="text-accent shrink-0" />
+                <h3 className="text-sm font-bold text-text-primary">
+                  {cat.label}
+                </h3>
+              </div>
+              {/* Items */}
+              <ul className="space-y-1.5">
+                {cat.items.map((amenity) => (
+                  <li key={amenity} className="flex items-start gap-2.5">
+                    <Check size={14} className="text-accent-light shrink-0 mt-0.5" />
+                    <span className="text-sm text-text-secondary leading-snug">{amenity}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

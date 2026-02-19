@@ -26,7 +26,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
   const isScale10 = review.rating !== undefined && review.rating > 5;
 
   return (
-    <div className="bg-white rounded-lg border border-border p-5">
+    <div className="bg-white rounded-lg border border-border p-5 transition-all duration-200 hover:shadow-sm hover:border-border-dark/10">
       <div className="flex items-start gap-3 mb-3">
         <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">
           {getInitials(name)}
