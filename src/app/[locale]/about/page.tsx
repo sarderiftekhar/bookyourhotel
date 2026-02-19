@@ -45,8 +45,8 @@ export default function AboutPage() {
             { icon: Globe, title: "Global Coverage", desc: "Over 2 million hotels across 190+ countries worldwide." },
             { icon: Users, title: "Customer First", desc: "24/7 support and a dedicated team to help with your bookings." },
             { icon: Award, title: "Best Price Guarantee", desc: "We compare rates to ensure you get the best deal every time." },
-          ].map((item, i) => (
-            <div key={i} className="flex gap-4">
+          ].map((item) => (
+            <div key={item.title} className="flex gap-4">
               <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
                 <item.icon size={24} className="text-accent" />
               </div>

@@ -14,7 +14,7 @@ export default function MobileMenu({ onClose }: MobileMenuProps) {
   return (
     <div className="fixed inset-0 z-50 md:hidden">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
+      <button type="button" aria-label="Close menu" className="fixed inset-0 bg-black/50 border-0 cursor-default" onClick={onClose} />
 
       {/* Menu panel */}
       <div className="fixed top-0 right-0 h-full w-72 bg-white shadow-xl">

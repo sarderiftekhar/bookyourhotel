@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, X, Bed } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchStore } from "@/store/searchStore";
 
@@ -12,24 +12,43 @@ interface PlaceResult {
   types: string[];
 }
 
+const TRENDING = [
+  { name: "London", country: "United Kingdom" },
+  { name: "Paris", country: "France" },
+  { name: "Dubai", country: "United Arab Emirates" },
+  { name: "New York", country: "United States" },
+  { name: "Tokyo", country: "Japan" },
+];
+
 export default function LocationAutocomplete() {
-  const { location, setLocation } = useSearchStore();
+  const { location, placeId, setLocation } = useSearchStore();
   const [query, setQuery] = useState(location);
   const [results, setResults] = useState<PlaceResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const prevLocationRef = useRef(location);
+  // Track whether the user actively changed the query (typed, not just page load)
+  const userTypedRef = useRef(false);
 
-  useEffect(() => {
-    setQuery(location);
-  }, [location]);
+  // Sync query from store when location changes externally
+  if (location !== prevLocationRef.current) {
+    prevLocationRef.current = location;
+    if (query !== location) {
+      setQuery(location);
+    }
+  }
 
   useEffect(() => {
     if (debouncedQuery.length < 2) {
       setResults([]);
       return;
     }
+
+    // Don't fetch if the user hasn't actively typed
+    if (!userTypedRef.current) return;
 
     async function fetchPlaces() {
       setLoading(true);
@@ -38,7 +57,10 @@ export default function LocationAutocomplete() {
         const data = await res.json();
         if (data.data) {
           setResults(data.data.slice(0, 8));
-          setIsOpen(true);
+          // Only open dropdown if user is actively typing
+          if (userTypedRef.current) {
+            setIsOpen(true);
+          }
         }
       } catch {
         setResults([]);
@@ -61,39 +83,105 @@ export default function LocationAutocomplete() {
   }, []);
 
   function handleSelect(place: PlaceResult) {
+    userTypedRef.current = false;
     setQuery(place.displayName);
     setLocation(place.displayName, place.placeId);
+    setResults([]);
     setIsOpen(false);
   }
+
+  function handleTrending(name: string) {
+    userTypedRef.current = false;
+    setQuery(name);
+    setLocation(name, "");
+    setResults([]);
+    setIsOpen(false);
+  }
+
+  function handleClear() {
+    userTypedRef.current = false;
+    setQuery("");
+    setLocation("", "");
+    setResults([]);
+    inputRef.current?.focus();
+  }
+
+  // Only show trending when user focuses an empty/short input
+  const showTrending = isOpen && results.length === 0 && !loading && debouncedQuery.length < 2;
+  // Only show results dropdown when open AND user actively typed
+  const showResults = isOpen && results.length > 0;
 
   return (
     <div ref={wrapperRef} className="relative">
       <div className="relative">
-        <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+        <Bed size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
-            if (e.target.value !== location) {
-              setLocation("", "");
+            const val = e.target.value;
+            userTypedRef.current = true;
+            setQuery(val);
+            setLocation(val, "");
+          }}
+          onFocus={() => {
+            // Only show dropdown on focus if the input is empty/short (for trending)
+            // or if there are already results from active typing
+            if (query.length < 2 || results.length > 0) {
+              setIsOpen(true);
+            }
+            // If the input has a value from a previous selection, don't reopen
+            // the dropdown — the user already picked a place
+            if (query.length >= 2 && placeId) {
+              setIsOpen(false);
             }
           }}
-          onFocus={() => results.length > 0 && setIsOpen(true)}
-          placeholder="City, hotel, or destination"
-          className="w-full pl-9 pr-4 py-2.5 text-sm border border-border rounded-lg bg-bg-card text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+          placeholder="Where are you going?"
+          className="w-full pl-10 pr-9 py-3 text-sm border-0 bg-transparent text-text-primary placeholder:text-text-muted focus:outline-none"
         />
+        {query && (
+          <button
+            onClick={handleClear}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-text-muted/20 hover:bg-text-muted/30 flex items-center justify-center transition-colors cursor-pointer"
+          >
+            <X size={12} className="text-text-secondary" />
+          </button>
+        )}
       </div>
 
-      {isOpen && results.length > 0 && (
-        <div className="absolute z-50 top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-border max-h-60 overflow-y-auto">
+      {/* Trending destinations */}
+      {showTrending && (
+        <div className="absolute z-50 top-full mt-1 w-full bg-white rounded-xl shadow-xl border border-border max-h-72 overflow-y-auto">
+          <p className="px-4 pt-3 pb-1.5 text-xs font-bold text-text-primary">
+            Trending destinations
+          </p>
+          {TRENDING.map((t) => (
+            <button
+              key={t.name}
+              onClick={() => handleTrending(t.name)}
+              className="w-full text-left px-4 py-2.5 hover:bg-bg-cream transition-colors flex items-center gap-3"
+            >
+              <MapPin size={16} className="text-accent shrink-0" />
+              <div>
+                <div className="text-sm font-medium text-text-primary">{t.name}</div>
+                <div className="text-xs text-text-muted">{t.country}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Search results */}
+      {showResults && (
+        <div className="absolute z-50 top-full mt-1 w-full bg-white rounded-xl shadow-xl border border-border max-h-72 overflow-y-auto">
           {results.map((place) => (
             <button
               key={place.placeId}
               onClick={() => handleSelect(place)}
-              className="w-full text-left px-4 py-3 hover:bg-bg-cream transition-colors flex items-start gap-3 border-b border-border/50 last:border-0"
+              className="w-full text-left px-4 py-2.5 hover:bg-bg-cream transition-colors flex items-center gap-3 border-b border-border/30 last:border-0"
             >
-              <MapPin size={14} className="text-accent mt-0.5 shrink-0" />
+              <MapPin size={16} className="text-accent shrink-0" />
               <div>
                 <div className="text-sm font-medium text-text-primary">{place.displayName}</div>
                 {place.formattedAddress && (
@@ -105,8 +193,8 @@ export default function LocationAutocomplete() {
         </div>
       )}
 
-      {loading && (
-        <div className="absolute z-50 top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-border p-4 text-center text-sm text-text-muted">
+      {loading && userTypedRef.current && (
+        <div className="absolute z-50 top-full mt-1 w-full bg-white rounded-xl shadow-xl border border-border p-4 text-center text-sm text-text-muted">
           Searching...
         </div>
       )}

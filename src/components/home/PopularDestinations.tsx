@@ -20,10 +20,10 @@ export default function PopularDestinations() {
   const nextDest = FEATURED_DESTINATIONS[(cur + 1) % total];
 
   return (
-    <section className="py-20 sm:py-28 bg-accent relative overflow-hidden">
+    <section className="py-20 sm:py-28 bg-[#E6F5F2] relative overflow-hidden">
       {/* Subtle decorative elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent-bright/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent-bright/3 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/3 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none" />
 
       <div
         ref={sectionRef}
@@ -35,7 +35,7 @@ export default function PopularDestinations() {
             <div className="w-8 h-8 rounded-full bg-accent-bright/20 flex items-center justify-center">
               <MapPin size={14} className="text-accent-bright" />
             </div>
-            <span className="text-white/60 text-sm font-medium uppercase tracking-widest">
+            <span className="text-accent/60 text-sm font-medium uppercase tracking-widest">
               Popular Destinations
             </span>
           </div>
@@ -45,8 +45,8 @@ export default function PopularDestinations() {
                 key={tag}
                 className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
                   tag === "All"
-                    ? "bg-white text-accent"
-                    : "border border-white/20 text-white/60 hover:bg-white/10 hover:text-white"
+                    ? "bg-accent text-white"
+                    : "border border-accent/20 text-accent/60 hover:bg-accent/10 hover:text-accent"
                 }`}
               >
                 {tag}
@@ -59,7 +59,7 @@ export default function PopularDestinations() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           {/* Left — Featured card with slider */}
           <div className="relative">
-            <div className="relative rounded-3xl overflow-hidden bg-white/5 group">
+            <div className="relative rounded-3xl overflow-hidden bg-accent/5 group">
               {/* Main image */}
               <div className="relative h-[380px] sm:h-[440px] overflow-hidden">
                 <Image
@@ -130,14 +130,14 @@ export default function PopularDestinations() {
             {/* Headline */}
             <div className="mb-8 lg:mb-10">
               <h2
-                className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-white leading-tight mb-5"
+                className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-accent leading-tight mb-5"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
                 Discover Excellence in Hospitality. Trusted Hotels You Can Rely&nbsp;On
               </h2>
               <Link
                 href="/hotels/dubai"
-                className="inline-flex items-center gap-2 border border-white/25 text-white text-sm font-medium rounded-full px-5 py-2.5 hover:bg-white/10 transition-all duration-300 group"
+                className="inline-flex items-center gap-2 border border-accent/25 text-accent text-sm font-medium rounded-full px-5 py-2.5 hover:bg-accent/10 transition-all duration-300 group"
               >
                 View All Destinations
                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" />
@@ -172,15 +172,15 @@ export default function PopularDestinations() {
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-accent-bright text-lg">*</span>
-                    <span className="text-white/40 text-xs uppercase tracking-wider font-medium">Up Next</span>
+                    <span className="text-accent/40 text-xs uppercase tracking-wider font-medium">Up Next</span>
                   </div>
-                  <p className="text-white/50 text-sm leading-relaxed">
+                  <p className="text-accent/50 text-sm leading-relaxed">
                     Our top-tier hotels offer a comprehensive range of services, including premium amenities, personalized concierge, and 24/7 guest support.
                   </p>
                 </div>
                 <Link
                   href={`/hotels/${nextDest.slug}`}
-                  className="mt-4 w-10 h-10 rounded-full bg-white flex items-center justify-center text-accent hover:bg-accent-bright hover:text-white transition-all duration-300 shrink-0"
+                  className="mt-4 w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white hover:bg-accent-bright transition-all duration-300 shrink-0"
                 >
                   <ArrowUpRight size={16} />
                 </Link>
@@ -191,14 +191,14 @@ export default function PopularDestinations() {
 
         {/* Progress dots */}
         <div className="flex items-center justify-center gap-2 mt-12">
-          {FEATURED_DESTINATIONS.map((_, i) => (
+          {FEATURED_DESTINATIONS.map((d, i) => (
             <button
-              key={i}
+              key={d.slug}
               onClick={() => setCur(i)}
               className={`rounded-full transition-all duration-300 ${
                 i === cur
-                  ? "w-8 h-2 bg-accent-bright"
-                  : "w-2 h-2 bg-white/20 hover:bg-white/40"
+                  ? "w-8 h-2 bg-accent"
+                  : "w-2 h-2 bg-accent/20 hover:bg-accent/40"
               }`}
               aria-label={`Go to ${FEATURED_DESTINATIONS[i].name}`}
             />

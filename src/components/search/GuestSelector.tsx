@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Users, Minus, Plus } from "lucide-react";
+import { Users, Minus, Plus, ChevronDown } from "lucide-react";
 import { useSearchStore } from "@/store/searchStore";
-import { generateGuestSummary } from "@/lib/utils";
 
 export default function GuestSelector() {
   const { adults, children, rooms, setGuests, setRooms } = useSearchStore();
@@ -20,22 +19,22 @@ export default function GuestSelector() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const summary = generateGuestSummary(adults, children, rooms);
+  const summary = `${adults} adult${adults !== 1 ? "s" : ""} \u00B7 ${children} child${children !== 1 ? "ren" : ""} \u00B7 ${rooms} room${rooms !== 1 ? "s" : ""}`;
 
   return (
     <div ref={wrapperRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm border border-border rounded-lg bg-bg-card text-text-primary hover:border-accent/50 transition-colors text-left"
+        className="w-full flex items-center gap-2 px-3 py-3 text-sm bg-transparent text-text-primary text-left cursor-pointer"
       >
-        <Users size={16} className="text-text-muted shrink-0" />
-        <span className="truncate">{summary}</span>
+        <Users size={18} className="text-text-muted shrink-0" />
+        <span className="truncate flex-1">{summary}</span>
+        <ChevronDown size={14} className={`text-text-muted transition-transform duration-200 shrink-0 ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 top-full mt-1 bg-white rounded-lg shadow-lg border border-border p-4 w-64 right-0">
-          <div className="space-y-4">
-            {/* Adults */}
+        <div className="absolute z-50 top-full mt-1 bg-white rounded-xl shadow-xl border border-border p-5 w-72 right-0">
+          <div className="space-y-5">
             <CounterRow
               label="Adults"
               value={adults}
@@ -43,7 +42,6 @@ export default function GuestSelector() {
               max={9}
               onChange={(v) => setGuests(v, children, [])}
             />
-            {/* Children */}
             <CounterRow
               label="Children"
               value={children}
@@ -51,7 +49,6 @@ export default function GuestSelector() {
               max={6}
               onChange={(v) => setGuests(adults, v, [])}
             />
-            {/* Rooms */}
             <CounterRow
               label="Rooms"
               value={rooms}
@@ -60,6 +57,13 @@ export default function GuestSelector() {
               onChange={(v) => setRooms(v)}
             />
           </div>
+
+          <button
+            onClick={() => setIsOpen(false)}
+            className="w-full mt-5 py-2.5 text-sm font-semibold text-accent border border-accent rounded-lg hover:bg-accent hover:text-white transition-colors cursor-pointer"
+          >
+            Done
+          </button>
         </div>
       )}
     </div>
@@ -81,22 +85,22 @@ function CounterRow({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-text-primary">{label}</span>
+      <span className="text-sm font-medium text-text-primary">{label}</span>
       <div className="flex items-center gap-3">
         <button
           onClick={() => value > min && onChange(value - 1)}
           disabled={value <= min}
-          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-text-secondary hover:border-accent hover:text-accent transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-text-secondary hover:border-accent hover:text-accent transition-colors disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
         >
-          <Minus size={14} />
+          <Minus size={16} />
         </button>
-        <span className="w-6 text-center text-sm font-medium">{value}</span>
+        <span className="w-6 text-center text-sm font-semibold">{value}</span>
         <button
           onClick={() => value < max && onChange(value + 1)}
           disabled={value >= max}
-          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-text-secondary hover:border-accent hover:text-accent transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-text-secondary hover:border-accent hover:text-accent transition-colors disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
         >
-          <Plus size={14} />
+          <Plus size={16} />
         </button>
       </div>
     </div>

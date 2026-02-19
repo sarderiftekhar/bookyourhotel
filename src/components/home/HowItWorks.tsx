@@ -51,7 +51,7 @@ export default function HowItWorks() {
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
           {steps.map((step, index) => (
             <div
-              key={index}
+              key={step.number}
               className={`group text-center ${
                 gridVisible ? `animate-fade-up stagger-${index + 1}` : "scroll-hidden"
               }`}

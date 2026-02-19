@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Map, List, SlidersHorizontal, X } from "lucide-react";
+import { Map, List, SlidersHorizontal, X, ChevronRight } from "lucide-react";
+import { Link } from "@/i18n/routing";
 import { useSearchStore } from "@/store/searchStore";
 import { usePreferencesStore } from "@/store/preferencesStore";
 import SearchWidget from "@/components/search/SearchWidget";
 import SearchFilters, { FilterState } from "@/components/search/SearchFilters";
 import HotelGrid from "@/components/hotels/HotelGrid";
 import HotelMap from "@/components/hotels/HotelMap";
-import Spinner from "@/components/ui/Spinner";
+import Spinner, { LoadingOverlay } from "@/components/ui/Spinner";
 import { useParams } from "next/navigation";
 
 interface HotelResult {
@@ -32,6 +33,14 @@ interface HotelResult {
 }
 
 export default function HotelsPage() {
+  return (
+    <Suspense fallback={<div className="pt-20 min-h-screen flex items-center justify-center"><Spinner size={56} /></div>}>
+      <HotelsPageInner />
+    </Suspense>
+  );
+}
+
+function HotelsPageInner() {
   const t = useTranslations("search");
   const tc = useTranslations("common");
   const searchParams = useSearchParams();
@@ -53,6 +62,13 @@ export default function HotelsPage() {
     freeCancellation: false,
   });
 
+  // A key that changes on filter/sort change to trigger re-entrance animation
+  const resultKey = useMemo(
+    () =>
+      `${filters.starRatings.join(",")}-${filters.boardTypes.join(",")}-${filters.freeCancellation}-${filters.minPrice}-${filters.maxPrice}-${sortBy}`,
+    [filters, sortBy]
+  );
+
   useEffect(() => {
     async function searchHotels() {
       setLoading(true);
@@ -61,7 +77,6 @@ export default function HotelsPage() {
         const ci = searchParams.get("checkIn") || checkIn;
         const co = searchParams.get("checkOut") || checkOut;
 
-        // Read advanced filters from URL params
         const starsParam = searchParams.get("stars");
         const hotelNameParam = searchParams.get("hotelName");
         const budgetParam = searchParams.get("budget");
@@ -69,7 +84,6 @@ export default function HotelsPage() {
           ? starsParam.split(",").map(Number).filter((n) => n >= 1 && n <= 5)
           : undefined;
 
-        // Pre-populate sidebar filters from URL params
         const filterUpdates: Partial<FilterState> = {};
         if (starRatingFilter?.length) {
           filterUpdates.starRatings = starRatingFilter;
@@ -97,7 +111,6 @@ export default function HotelsPage() {
           occupancies: [{ adults, children: children > 0 ? Array(children).fill(8) : undefined }],
         };
 
-        // Server-side filters
         if (starRatingFilter?.length) {
           requestBody.starRating = starRatingFilter;
         }
@@ -145,6 +158,11 @@ export default function HotelsPage() {
       return true;
     })
     .sort((a, b) => {
+      const aUnknown = a.name === "Unknown Hotel" || (!a.main_photo && !a.starRating);
+      const bUnknown = b.name === "Unknown Hotel" || (!b.main_photo && !b.starRating);
+      if (aUnknown && !bUnknown) return 1;
+      if (!aUnknown && bUnknown) return -1;
+
       switch (sortBy) {
         case "price_asc":
           return (a.minRate || 0) - (b.minRate || 0);
@@ -159,18 +177,60 @@ export default function HotelsPage() {
       }
     });
 
+  // Active filter chips
+  const activeChips: { label: string; key: string; onRemove: () => void }[] = [];
+  if (filters.freeCancellation) {
+    activeChips.push({
+      label: t("freeCancellationOption"),
+      key: "fc",
+      onRemove: () => setFilters({ ...filters, freeCancellation: false }),
+    });
+  }
+  filters.starRatings.forEach((star) => {
+    activeChips.push({
+      label: `${star}★`,
+      key: `star-${star}`,
+      onRemove: () => setFilters({ ...filters, starRatings: filters.starRatings.filter((s) => s !== star) }),
+    });
+  });
+  filters.boardTypes.forEach((board) => {
+    activeChips.push({
+      label: board,
+      key: `board-${board}`,
+      onRemove: () => setFilters({ ...filters, boardTypes: filters.boardTypes.filter((b) => b !== board) }),
+    });
+  });
+
+  const mappableHotels = filteredHotels.filter((h) => h.latitude && h.longitude) as Array<{
+    hotelId: string;
+    name: string;
+    latitude: number;
+    longitude: number;
+    minRate?: number;
+    currency?: string;
+  }>;
+
+  const prices = hotels.map((h) => h.minRate).filter((p): p is number => p !== undefined && p > 0);
+
   return (
     <div className="pt-20 min-h-screen bg-bg-cream">
       {/* Sticky Search Bar */}
-      <div className="bg-white border-b border-border shadow-sm py-4">
+      <div className="bg-white shadow-sm py-5 sm:py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SearchWidget compact />
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-1.5 text-xs text-text-muted mb-4">
+          <Link href="/" className="hover:text-accent transition-colors">{t("breadcrumbHome")}</Link>
+          <ChevronRight size={12} />
+          <span className="text-text-primary font-medium capitalize">{t("resultsTitle", { location })}</span>
+        </nav>
+
         {/* Results Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <div>
             <h1
               className="text-2xl font-bold text-text-primary capitalize"
@@ -190,7 +250,7 @@ export default function HotelsPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 text-sm border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-accent/30"
+              className="px-5 py-2.5 text-sm font-medium bg-white rounded-full shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent/30 border-0 appearance-none cursor-pointer transition-shadow"
             >
               <option value="price_asc">{t("priceLowHigh")}</option>
               <option value="price_desc">{t("priceHighLow")}</option>
@@ -199,16 +259,16 @@ export default function HotelsPage() {
             </select>
 
             {/* View Toggle */}
-            <div className="flex items-center border border-border rounded-lg overflow-hidden">
+            <div className="flex items-center bg-white rounded-full shadow-md p-1">
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 ${viewMode === "list" ? "bg-accent text-white" : "bg-white text-text-secondary hover:bg-bg-cream"}`}
+                className={`p-2 transition-all duration-200 cursor-pointer rounded-full ${viewMode === "list" ? "bg-accent text-white shadow-md shadow-accent/30" : "text-text-muted hover:text-accent hover:bg-bg-cream"}`}
               >
                 <List size={18} />
               </button>
               <button
                 onClick={() => setViewMode("map")}
-                className={`p-2 ${viewMode === "map" ? "bg-accent text-white" : "bg-white text-text-secondary hover:bg-bg-cream"}`}
+                className={`p-2 transition-all duration-200 cursor-pointer rounded-full ${viewMode === "map" ? "bg-accent text-white shadow-md shadow-accent/30" : "text-text-muted hover:text-accent hover:bg-bg-cream"}`}
               >
                 <Map size={18} />
               </button>
@@ -217,7 +277,7 @@ export default function HotelsPage() {
             {/* Mobile Filters Toggle */}
             <button
               onClick={() => setShowFilters(true)}
-              className="lg:hidden flex items-center gap-1.5 px-3 py-2 text-sm border border-border rounded-lg bg-white hover:bg-bg-cream"
+              className="lg:hidden flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-white rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer"
             >
               <SlidersHorizontal size={16} />
               {tc("filters")}
@@ -225,52 +285,96 @@ export default function HotelsPage() {
           </div>
         </div>
 
+        {/* Active filter chips */}
+        {activeChips.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-5">
+            {activeChips.map((chip) => (
+              <span
+                key={chip.key}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-white text-xs font-bold rounded-full shadow-md shadow-accent/20 transition-all hover:shadow-lg"
+              >
+                {chip.label}
+                <button
+                  onClick={chip.onRemove}
+                  className="hover:bg-white/20 rounded-full p-0.5 cursor-pointer transition-colors"
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
+            <button
+              onClick={() => {
+                const cleared: FilterState = { minPrice: 0, maxPrice: 10000, starRatings: [], boardTypes: [], freeCancellation: false };
+                setFilters(cleared);
+              }}
+              className="text-xs text-text-muted hover:text-accent transition-colors cursor-pointer"
+            >
+              {tc("clearAll")}
+            </button>
+          </div>
+        )}
+
         {/* Content */}
         <div className="flex gap-6">
           {/* Filters Sidebar - Desktop */}
           <aside className="hidden lg:block w-72 shrink-0">
-            <SearchFilters onFilterChange={setFilters} initialFilters={filters} />
+            {/* Mini map preview */}
+            {mappableHotels.length > 0 && viewMode === "list" && (
+              <div className="mb-3 rounded-3xl overflow-hidden shadow-sm">
+                <div className="h-[200px]">
+                  <HotelMap hotels={mappableHotels} compact />
+                </div>
+                <button
+                  onClick={() => setViewMode("map")}
+                  className="w-full py-2.5 text-xs font-medium text-accent hover:text-accent-hover bg-white transition-colors cursor-pointer"
+                >
+                  {t("showOnMap")}
+                </button>
+              </div>
+            )}
+
+            <SearchFilters
+              onFilterChange={setFilters}
+              initialFilters={filters}
+              hotelCount={filteredHotels.length}
+              prices={prices}
+              currency={currency}
+            />
           </aside>
 
           {/* Mobile Filters Overlay */}
           {showFilters && (
             <div className="fixed inset-0 z-50 lg:hidden">
-              <div className="fixed inset-0 bg-black/50" onClick={() => setShowFilters(false)} />
-              <div className="fixed top-0 left-0 h-full w-80 bg-white overflow-y-auto p-4">
+              <button type="button" aria-label="Close filters" className="fixed inset-0 bg-black/50 border-0 cursor-default" onClick={() => setShowFilters(false)} />
+              <div className="fixed top-0 left-0 h-full w-80 bg-bg-cream overflow-y-auto p-4 rounded-r-3xl shadow-xl">
                 <SearchFilters
                   onFilterChange={setFilters}
                   onClose={() => setShowFilters(false)}
                   initialFilters={filters}
+                  hotelCount={filteredHotels.length}
+                  prices={prices}
+                  currency={currency}
                 />
               </div>
             </div>
           )}
 
           {/* Results */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 overflow-hidden">
             {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <Spinner size={32} />
-              </div>
+              <LoadingOverlay message={t("resultsTitle", { location })} />
             ) : filteredHotels.length === 0 ? (
-              <div className="text-center py-20">
+              <div className="text-center py-20 bg-white rounded-3xl shadow-sm animate-results-in">
                 <p className="text-lg text-text-secondary mb-2">{t("noHotelsFound")}</p>
                 <p className="text-sm text-text-muted">{t("adjustFilters")}</p>
               </div>
             ) : viewMode === "list" ? (
-              <HotelGrid hotels={filteredHotels} />
+              <div key={resultKey} className="animate-results-in">
+                <HotelGrid hotels={filteredHotels} />
+              </div>
             ) : (
-              <div className="h-[600px] rounded-xl overflow-hidden">
-                <HotelMap
-                  hotels={filteredHotels.filter((h) => h.latitude && h.longitude) as Array<{
-                    hotelId: string;
-                    name: string;
-                    latitude: number;
-                    longitude: number;
-                    minRate?: number;
-                    currency?: string;
-                  }>}
-                />
+              <div className="h-[600px] rounded-3xl overflow-hidden shadow-sm">
+                <HotelMap hotels={mappableHotels} />
               </div>
             )}
           </div>

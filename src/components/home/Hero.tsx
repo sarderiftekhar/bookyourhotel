@@ -148,9 +148,9 @@ export default function Hero() {
         {/* Scrolling text marquee bar — aligned with hero width */}
         <div className="overflow-hidden py-2.5 mb-4 sm:mb-5">
           <div className="animate-marquee-slow flex whitespace-nowrap">
-            {[0, 1].map((copy) => (
+            {["marquee-a", "marquee-b"].map((id) => (
               <span
-                key={copy}
+                key={id}
                 className="text-accent text-xs font-medium tracking-wider uppercase shrink-0"
               >
                 {marqueeText}&nbsp;&nbsp;&bull;&nbsp;&nbsp;
@@ -160,6 +160,8 @@ export default function Hero() {
         </div>
         <div
           ref={contRef}
+          role="region"
+          aria-label="Featured destinations carousel"
           className="relative rounded-3xl overflow-hidden h-[520px] sm:h-[600px] select-none"
           style={{ cursor: dragging ? "grabbing" : "grab" }}
           onMouseDown={onDown}
@@ -177,7 +179,6 @@ export default function Hero() {
               width: `${NUM * 100}%`,
               transform: `translate3d(${trackX}%, 0, 0)`,
               transition: trans,
-              willChange: "transform",
             }}
           >
             {SLIDES.map((slide, i) => (
@@ -227,8 +228,7 @@ export default function Hero() {
                       fontFamily: "var(--font-playfair)",
                       transform: `translate3d(${diff / 60}px, -8%, 0)`,
                       transition: trans,
-                      willChange: "transform",
-                      userSelect: "none",
+                              userSelect: "none",
                     }}
                   >
                     {slide.letter}
@@ -246,8 +246,7 @@ export default function Hero() {
                       fontSize: "clamp(1.8rem, 8vw, 7rem)",
                       transform: `translate3d(${diff / 15}px, -40%, 0)`,
                       transition: trans,
-                      willChange: "transform",
-                      userSelect: "none",
+                              userSelect: "none",
                       textShadow: "0 4px 40px rgba(0,0,0,0.3)",
                     }}
                   >
@@ -274,12 +273,12 @@ export default function Hero() {
 
           {/* Navigation dots */}
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2.5 z-15">
-            {SLIDES.map((_, i) => (
+            {SLIDES.map((slide, i) => (
               <button
-                key={i}
+                key={slide.city}
                 onClick={(e) => { e.stopPropagation(); goTo(i); }}
                 className="group relative w-7 h-7 flex items-center justify-center"
-                aria-label={`Go to ${SLIDES[i].city}`}
+                aria-label={`Go to ${slide.city}`}
               >
                 <span className="block w-7 h-7 rounded-full border-2 border-white transition-all duration-300" />
                 <span
@@ -294,18 +293,22 @@ export default function Hero() {
           </div>
 
           {/* Side nav hover areas */}
-          <div
-            className="absolute left-0 top-0 w-[10%] h-full z-12 cursor-pointer opacity-0 hover:opacity-100 transition-opacity duration-300"
+          <button
+            type="button"
+            aria-label="Previous slide"
+            className="absolute left-0 top-0 w-[10%] h-full z-12 cursor-pointer opacity-0 hover:opacity-100 transition-opacity duration-300 border-0 bg-transparent p-0"
             onClick={() => goLeft()}
           >
             <div className="absolute inset-0 bg-linear-to-r from-white/10 to-transparent" />
-          </div>
-          <div
-            className="absolute right-0 top-0 w-[10%] h-full z-12 cursor-pointer opacity-0 hover:opacity-100 transition-opacity duration-300"
+          </button>
+          <button
+            type="button"
+            aria-label="Next slide"
+            className="absolute right-0 top-0 w-[10%] h-full z-12 cursor-pointer opacity-0 hover:opacity-100 transition-opacity duration-300 border-0 bg-transparent p-0"
             onClick={() => goRight()}
           >
             <div className="absolute inset-0 bg-linear-to-l from-white/10 to-transparent" />
-          </div>
+          </button>
         </div>
       </div>
 

@@ -35,8 +35,10 @@ export default function HotelGallery({ images, hotelName }: HotelGalleryProps) {
       {/* Gallery Grid */}
       <div className="grid grid-cols-4 grid-rows-2 gap-2 h-[400px] sm:h-[480px] rounded-xl overflow-hidden">
         {/* Main image */}
-        <div
-          className="col-span-2 row-span-2 relative cursor-pointer group"
+        <button
+          type="button"
+          aria-label={`View ${hotelName} main photo`}
+          className="col-span-2 row-span-2 relative cursor-pointer group text-left overflow-hidden"
           onClick={() => openLightbox(0)}
         >
           {displayImages[0] ? (
@@ -51,13 +53,15 @@ export default function HotelGallery({ images, hotelName }: HotelGalleryProps) {
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-accent/20 to-bg-cream" />
           )}
-        </div>
+        </button>
 
         {/* Secondary images */}
         {[1, 2, 3, 4].map((idx) => (
-          <div
-            key={idx}
-            className="relative cursor-pointer group"
+          <button
+            type="button"
+            key={`photo-${idx}`}
+            aria-label={`View ${hotelName} photo ${idx + 1}`}
+            className="relative cursor-pointer group overflow-hidden"
             onClick={() => openLightbox(idx)}
           >
             {displayImages[idx] ? (
@@ -81,7 +85,7 @@ export default function HotelGallery({ images, hotelName }: HotelGalleryProps) {
                 </div>
               </div>
             )}
-          </div>
+          </button>
         ))}
       </div>
 

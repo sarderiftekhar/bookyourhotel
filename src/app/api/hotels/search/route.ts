@@ -82,23 +82,39 @@ export async function POST(request: NextRequest) {
 
     const ratesData = result.data as RateResult[];
 
-    // Check if includeHotelData returned inline details
-    const hasInlineDetails = ratesData.length > 0 && ratesData[0].name;
+    // Check if rates response includes inline hotel data
+    const hasInlineDetails = ratesData.length > 0 && (
+      ratesData[0].name ||
+      (ratesData[0] as unknown as Record<string, unknown>).hotelName
+    );
 
     let detailsMap = new Map<string, Record<string, unknown>>();
 
     if (!hasInlineDetails) {
-      // Fallback: fetch hotel details in parallel
+      // Fallback: fetch hotel details in parallel (batched to avoid 429 rate limits)
       const hotelIds = ratesData.map((h) => h.hotelId);
-      const detailsResults = await Promise.allSettled(
-        hotelIds.map((id) => getHotelDetails(id))
-      );
+      const BATCH_SIZE = 5;
+      const BATCH_DELAY = 200; // ms between batches
 
-      detailsResults.forEach((res, i) => {
-        if (res.status === "fulfilled" && res.value?.data) {
-          detailsMap.set(hotelIds[i], res.value.data);
+      for (let i = 0; i < hotelIds.length; i += BATCH_SIZE) {
+        if (i > 0) {
+          await new Promise((r) => setTimeout(r, BATCH_DELAY));
         }
-      });
+        const batch = hotelIds.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.allSettled(
+          batch.map((id) => getHotelDetails(id))
+        );
+
+        batchResults.forEach((res, j) => {
+          if (res.status === "fulfilled" && res.value?.data) {
+            detailsMap.set(batch[j], res.value.data);
+          } else if (res.status === "rejected") {
+            console.warn(`[search] Failed to fetch details for ${batch[j]}:`, res.reason?.message || res.reason);
+          }
+        });
+      }
+
+      console.log(`[search] Fetched details for ${detailsMap.size}/${hotelIds.length} hotels`);
     }
 
     // Merge rates with hotel details
@@ -108,22 +124,47 @@ export async function POST(request: NextRequest) {
         : (detailsMap.get(hotel.hotelId) || {});
       const cheapestRoom = hotel.roomTypes?.[0];
       const cheapestRate = cheapestRoom?.rates?.[0];
-      const minPrice = cheapestRoom?.offerRetailRate?.amount
+
+      // Try multiple price locations — LiteAPI response structure varies
+      let minPrice: number | undefined =
+        cheapestRoom?.offerRetailRate?.amount
+        ?? cheapestRoom?.suggestedSellingPrice?.amount
         ?? cheapestRate?.retailRate?.total?.[0]?.amount;
+
+      // If no price from first room, scan all rooms for lowest price
+      if (minPrice === undefined && hotel.roomTypes?.length > 1) {
+        for (const room of hotel.roomTypes) {
+          const price = room.offerRetailRate?.amount
+            ?? room.suggestedSellingPrice?.amount
+            ?? room.rates?.[0]?.retailRate?.total?.[0]?.amount;
+          if (price !== undefined && (minPrice === undefined || price < minPrice)) {
+            minPrice = price;
+          }
+        }
+      }
+
+      // Ensure it's a valid number
+      if (minPrice !== undefined) {
+        minPrice = Number(minPrice);
+        if (isNaN(minPrice) || minPrice <= 0) minPrice = undefined;
+      }
+
+      // Extract lat/lng from the 'location' object if present
+      const loc = details.location as { latitude?: number; longitude?: number; lat?: number; lng?: number } | undefined;
 
       return {
         hotelId: hotel.hotelId,
-        name: (details.name as string) || "Unknown Hotel",
-        starRating: details.starRating as number | undefined,
-        address: details.address as string | undefined,
-        city: details.city as string | undefined,
-        country: details.country as string | undefined,
-        latitude: details.latitude as number | undefined,
-        longitude: details.longitude as number | undefined,
-        main_photo: details.main_photo as string | undefined,
-        hotelImages: details.hotelImages as string[] | undefined,
-        reviewScore: details.reviewScore as number | undefined,
-        reviewCount: details.reviewCount as number | undefined,
+        name: (details.name as string) || (details.hotelName as string) || "Unknown Hotel",
+        starRating: (details.starRating as number | undefined),
+        address: (details.address as string | undefined),
+        city: (details.city as string | undefined),
+        country: (details.country as string | undefined),
+        latitude: (details.latitude as number | undefined) ?? loc?.latitude ?? loc?.lat,
+        longitude: (details.longitude as number | undefined) ?? loc?.longitude ?? loc?.lng,
+        main_photo: (details.main_photo as string | undefined) ?? (details.thumbnail as string | undefined),
+        hotelImages: (details.hotelImages as string[] | undefined),
+        reviewScore: (details.rating as number | undefined) ?? (details.reviewScore as number | undefined),
+        reviewCount: (details.reviewCount as number | undefined),
         minRate: minPrice,
         currency: cheapestRoom?.offerRetailRate?.currency
           ?? cheapestRate?.retailRate?.total?.[0]?.currency

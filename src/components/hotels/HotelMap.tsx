@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { MapPin } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 interface HotelMarker {
   hotelId: string;
@@ -16,9 +18,10 @@ interface HotelMapProps {
   hotels: HotelMarker[];
   center?: { lat: number; lng: number };
   onHotelClick?: (hotelId: string) => void;
+  compact?: boolean;
 }
 
-export default function HotelMap({ hotels, center, onHotelClick }: HotelMapProps) {
+export default function HotelMap({ hotels, center, onHotelClick, compact }: HotelMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -27,12 +30,13 @@ export default function HotelMap({ hotels, center, onHotelClick }: HotelMapProps
     if (!mapContainer.current || mapRef.current) return;
 
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-    if (!token) return;
+    if (!token || token === "your-mapbox-token-here") return;
 
     import("mapbox-gl").then((mapboxgl) => {
-      (mapboxgl as unknown as { accessToken: string }).accessToken = token;
+      const mb = mapboxgl.default || mapboxgl;
+      (mb as unknown as { accessToken: string }).accessToken = token;
 
-      const map = new mapboxgl.default.Map({
+      const map = new mb.Map({
         container: mapContainer.current!,
         style: "mapbox://styles/mapbox/light-v11",
         center: center
@@ -40,10 +44,12 @@ export default function HotelMap({ hotels, center, onHotelClick }: HotelMapProps
           : hotels.length > 0
           ? [hotels[0].longitude, hotels[0].latitude]
           : [0, 20],
-        zoom: 12,
+        zoom: compact ? 14 : 15,
       });
 
-      map.addControl(new mapboxgl.default.NavigationControl(), "top-right");
+      if (!compact) {
+        map.addControl(new mb.NavigationControl(), "top-right");
+      }
 
       mapRef.current = map;
 
@@ -62,6 +68,7 @@ export default function HotelMap({ hotels, center, onHotelClick }: HotelMapProps
     if (!mapRef.current || !mapLoaded) return;
 
     import("mapbox-gl").then((mapboxgl) => {
+      const mb = mapboxgl.default || mapboxgl;
       const map = mapRef.current!;
 
       // Remove existing markers
@@ -91,10 +98,10 @@ export default function HotelMap({ hotels, center, onHotelClick }: HotelMapProps
           onHotelClick?.(hotel.hotelId);
         });
 
-        new mapboxgl.default.Marker({ element: el })
+        new mb.Marker({ element: el })
           .setLngLat([hotel.longitude, hotel.latitude])
           .setPopup(
-            new mapboxgl.default.Popup({ offset: 25 }).setHTML(
+            new mb.Popup({ offset: 25 }).setHTML(
               `<strong style="font-size:13px">${hotel.name}</strong>`
             )
           )
@@ -103,7 +110,7 @@ export default function HotelMap({ hotels, center, onHotelClick }: HotelMapProps
 
       // Fit bounds if multiple hotels
       if (hotels.length > 1) {
-        const bounds = new mapboxgl.default.LngLatBounds();
+        const bounds = new mb.LngLatBounds();
         hotels.forEach((h) => {
           if (h.latitude && h.longitude) {
             bounds.extend([h.longitude, h.latitude]);
@@ -114,10 +121,23 @@ export default function HotelMap({ hotels, center, onHotelClick }: HotelMapProps
     });
   }, [hotels, mapLoaded, onHotelClick]);
 
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const hasToken = token && token !== "your-mapbox-token-here";
+
   return (
-    <div
-      ref={mapContainer}
-      className="w-full h-full min-h-[400px] rounded-xl overflow-hidden"
-    />
+    <div className={`relative w-full rounded-xl overflow-hidden ${compact ? "h-[300px]" : "h-full min-h-[400px]"}`}>
+      <div ref={mapContainer} className="w-full h-full" />
+      {!hasToken && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-bg-cream text-text-muted gap-2">
+          <MapPin size={32} className="text-accent-light" />
+          <p className="text-sm font-medium">Map unavailable</p>
+          <p className="text-xs">
+            {center
+              ? `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`
+              : "Location data available"}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }

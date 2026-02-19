@@ -84,16 +84,18 @@ export default function Newsletter() {
           <div className="absolute right-0 top-0 bottom-0 w-20 bg-linear-to-l from-white to-transparent z-10" />
 
           <div className="flex animate-marquee">
-            {[...PARTNER_LOGOS, ...PARTNER_LOGOS].map((logo, i) => (
-              <div
-                key={`${logo}-${i}`}
-                className="flex-none px-8 sm:px-12 flex items-center justify-center"
-              >
-                <span className="text-text-muted/40 text-lg sm:text-xl font-bold tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-playfair)" }}>
-                  {logo}
-                </span>
-              </div>
-            ))}
+            {["a", "b"].map((copy) =>
+              PARTNER_LOGOS.map((logo) => (
+                <div
+                  key={`${copy}-${logo}`}
+                  className="flex-none px-8 sm:px-12 flex items-center justify-center"
+                >
+                  <span className="text-text-muted/40 text-lg sm:text-xl font-bold tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-playfair)" }}>
+                    {logo}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

@@ -1,20 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/routing";
-import { MapPin, Clock, Star } from "lucide-react";
+import { useRouter, Link } from "@/i18n/routing";
+import {
+  MapPin,
+  Clock,
+  Star,
+  Wifi,
+  Waves,
+  UtensilsCrossed,
+  Car,
+  Wind,
+  Dumbbell,
+  Bath,
+  ParkingCircle,
+  ChevronDown,
+  ChevronRight,
+  X,
+  LocateFixed,
+  Bed,
+  MessageSquareText,
+  LayoutGrid,
+  Building,
+  FileText,
+} from "lucide-react";
 import { useSearchStore } from "@/store/searchStore";
 import { useBookingStore } from "@/store/bookingStore";
 import { usePreferencesStore } from "@/store/preferencesStore";
+import { getStarRatingText, formatCurrency } from "@/lib/utils";
+import { useActiveSection } from "@/hooks/useActiveSection";
 import HotelGallery from "@/components/hotels/HotelGallery";
-import RoomCard from "@/components/hotels/RoomCard";
 import AmenitiesList from "@/components/hotels/AmenitiesList";
 import ReviewCard from "@/components/hotels/ReviewCard";
-import ReviewSummary from "@/components/hotels/ReviewSummary";
 import HotelMap from "@/components/hotels/HotelMap";
 import Spinner from "@/components/ui/Spinner";
+import StickyTabNav, { type TabSection } from "@/components/hotels/StickyTabNav";
+import MobileBookingBar from "@/components/hotels/MobileBookingBar";
+import SmartHighlights from "@/components/hotels/SmartHighlights";
+import ReviewHighlights from "@/components/hotels/ReviewHighlights";
+import ReviewFilters from "@/components/hotels/ReviewFilters";
+import RoomSection from "@/components/hotels/RoomSection";
 
 interface HotelData {
   id: string;
@@ -40,6 +67,7 @@ interface RoomData {
   boardName: string;
   currency: string;
   retailRate: number;
+  originalRate?: number;
   maxOccupancy?: number;
   images?: string[];
   cancellationPolicy?: {
@@ -54,15 +82,56 @@ interface ReviewData {
   comment?: string;
   date?: string;
   country?: string;
+  type?: string;
 }
 
+const QUICK_AMENITY_MAP: Array<{ keywords: string[]; icon: React.ElementType; label: string }> = [
+  { keywords: ["free wifi"], icon: Wifi, label: "Free WiFi" },
+  { keywords: ["swimming pool", "pool"], icon: Waves, label: "Pool" },
+  { keywords: ["restaurant"], icon: UtensilsCrossed, label: "Restaurant" },
+  { keywords: ["parking"], icon: ParkingCircle, label: "Parking" },
+  { keywords: ["air conditioning"], icon: Wind, label: "A/C" },
+  { keywords: ["fitness", "gym"], icon: Dumbbell, label: "Fitness" },
+  { keywords: ["spa", "wellness"], icon: Bath, label: "Spa" },
+  { keywords: ["shuttle", "airport"], icon: Car, label: "Shuttle" },
+];
+
+function getQuickAmenities(facilities: string[]) {
+  const result: { icon: React.ElementType; label: string }[] = [];
+  for (const entry of QUICK_AMENITY_MAP) {
+    if (result.length >= 6) break;
+    const hasIt = facilities.some((f) =>
+      entry.keywords.some((kw) => f.toLowerCase().includes(kw))
+    );
+    if (hasIt) result.push({ icon: entry.icon, label: entry.label });
+  }
+  return result;
+}
+
+const SECTION_IDS = [
+  "section-overview",
+  "section-facilities",
+  "section-rooms",
+  "section-reviews",
+  "section-description",
+  "section-location",
+];
+
 export default function HotelDetailPage() {
+  return (
+    <Suspense fallback={<div className="pt-20 min-h-screen flex items-center justify-center"><Spinner size={40} /></div>}>
+      <HotelDetailPageInner />
+    </Suspense>
+  );
+}
+
+function HotelDetailPageInner() {
   const t = useTranslations("hotel");
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
   const hotelId = params.id as string;
-  const { checkIn, checkOut, adults, children } = useSearchStore();
+  const { checkIn, checkOut, adults, children, location } = useSearchStore();
   const { currency } = usePreferencesStore();
   const { setSelectedRoom } = useBookingStore();
 
@@ -70,29 +139,24 @@ export default function HotelDetailPage() {
   const [rooms, setRooms] = useState<RoomData[]>([]);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "rooms" | "amenities" | "reviews" | "location">("overview");
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [reviewSort, setReviewSort] = useState<"newest" | "highest" | "lowest">("newest");
+  const [travelerFilter, setTravelerFilter] = useState<string | null>(null);
+
+  const activeSection = useActiveSection(SECTION_IDS);
 
   useEffect(() => {
     async function fetchHotel() {
       setLoading(true);
       try {
-        // Fetch hotel details and reviews in parallel
+        const ci = searchParams.get("checkIn") || checkIn;
+        const co = searchParams.get("checkOut") || checkOut;
+
         const [hotelRes, reviewsRes, ratesRes] = await Promise.all([
           fetch(`/api/hotels/${hotelId}`),
-          fetch(`/api/reviews?hotelId=${hotelId}`),
-          fetch("/api/hotels/search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              checkIn: searchParams.get("checkIn") || checkIn,
-              checkOut: searchParams.get("checkOut") || checkOut,
-              adults,
-              children,
-              currency,
-              hotelIds: [hotelId],
-              occupancies: [{ adults }],
-            }),
-          }),
+          fetch(`/api/reviews?hotelId=${hotelId}&limit=50`),
+          fetch(`/api/hotels/${hotelId}/rates?checkIn=${encodeURIComponent(ci)}&checkOut=${encodeURIComponent(co)}&adults=${adults}&children=${children || 0}&currency=${currency}`),
         ]);
 
         const hotelData = await hotelRes.json();
@@ -101,6 +165,37 @@ export default function HotelDetailPage() {
 
         if (hotelData.data) {
           const d = hotelData.data;
+
+          const imageUrls: string[] = [];
+          if (Array.isArray(d.hotelImages)) {
+            d.hotelImages.forEach((img: { url?: string; urlHd?: string } | string) => {
+              if (typeof img === "string") {
+                imageUrls.push(img);
+              } else if (img.urlHd) {
+                imageUrls.push(img.urlHd);
+              } else if (img.url) {
+                imageUrls.push(img.url);
+              }
+            });
+          }
+          if (imageUrls.length === 0 && d.main_photo) {
+            imageUrls.push(d.main_photo);
+          }
+
+          const loc = d.location || {};
+          const times = d.checkinCheckoutTimes || {};
+
+          let facilityList: string[] = [];
+          if (Array.isArray(d.hotelFacilities) && d.hotelFacilities.length > 0) {
+            facilityList = d.hotelFacilities.map((f: string | { name: string }) =>
+              typeof f === "string" ? f : f.name
+            );
+          } else if (Array.isArray(d.facilities)) {
+            facilityList = d.facilities.map((f: string | { name: string }) =>
+              typeof f === "string" ? f : f.name
+            );
+          }
+
           setHotel({
             id: d.id || hotelId,
             name: d.name || "Hotel",
@@ -109,25 +204,82 @@ export default function HotelDetailPage() {
             address: d.address || "",
             city: d.city || "",
             country: d.country || "",
-            latitude: d.latitude || 0,
-            longitude: d.longitude || 0,
-            checkinTime: d.checkinTime || d.checkInTime || "15:00",
-            checkoutTime: d.checkoutTime || d.checkOutTime || "11:00",
-            facilities: d.facilities || d.amenities || [],
-            images: d.images || [],
-            reviewScore: d.reviewScore,
+            latitude: d.latitude || loc.latitude || 0,
+            longitude: d.longitude || loc.longitude || 0,
+            checkinTime: times.checkin_start || d.checkinTime || "15:00",
+            checkoutTime: times.checkout || d.checkoutTime || "11:00",
+            facilities: facilityList,
+            images: imageUrls,
+            reviewScore: d.rating ?? d.reviewScore,
             reviewCount: d.reviewCount,
           });
         }
 
-        if (reviewsData.data) {
-          setReviews(Array.isArray(reviewsData.data) ? reviewsData.data : []);
+        if (reviewsData.data && Array.isArray(reviewsData.data)) {
+          const mapped: ReviewData[] = reviewsData.data.map((r: Record<string, unknown>) => {
+            const pros = (r.pros as string) || "";
+            const cons = (r.cons as string) || "";
+            const comment = [pros, cons ? `Cons: ${cons}` : ""].filter(Boolean).join(" ") || (r.headline as string) || "";
+
+            return {
+              guestName: (r.name as string) || (r.guestName as string),
+              rating: (r.averageScore as number) ?? (r.rating as number),
+              title: (r.headline as string) || (r.title as string),
+              comment,
+              date: r.date ? new Date(r.date as string).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : undefined,
+              country: r.country ? (r.country as string).toUpperCase() : undefined,
+              type: (r.type as string)?.replace(/_/g, " "),
+            };
+          });
+          setReviews(mapped);
         }
 
-        if (ratesData.data && Array.isArray(ratesData.data) && ratesData.data.length > 0) {
-          const hotelRates = ratesData.data[0] as Record<string, unknown>;
-          const roomRates = (hotelRates.rooms || hotelRates.offers || []) as RoomData[];
-          setRooms(Array.isArray(roomRates) ? roomRates : []);
+        if (ratesData.data) {
+          const rateHotels = Array.isArray(ratesData.data) ? ratesData.data : [ratesData.data];
+          if (rateHotels.length > 0) {
+            const hotelRates = rateHotels[0] as Record<string, unknown>;
+            const roomTypes = (hotelRates.roomTypes || hotelRates.rooms || []) as Array<Record<string, unknown>>;
+            const parsedRooms: RoomData[] = [];
+
+            if (Array.isArray(roomTypes)) {
+              roomTypes.forEach((rt) => {
+                const offerId = rt.offerId as string;
+                const rates = (rt.rates || []) as Array<Record<string, unknown>>;
+                const offerRetail = rt.offerRetailRate as { amount?: number; currency?: string } | undefined;
+                const roomImages = (rt.images || []) as Array<{ url?: string; urlHd?: string } | string>;
+
+                const imgUrls: string[] = [];
+                if (Array.isArray(roomImages)) {
+                  roomImages.forEach((img) => {
+                    if (typeof img === "string") imgUrls.push(img);
+                    else if (img.urlHd) imgUrls.push(img.urlHd);
+                    else if (img.url) imgUrls.push(img.url);
+                  });
+                }
+
+                rates.forEach((rate) => {
+                  const retailTotal = (rate.retailRate as Record<string, unknown>)?.total as Array<{ amount: number; currency: string }> | undefined;
+                  const suggestedPrice = (rate.retailRate as Record<string, unknown>)?.suggestedSellingPrice as Array<{ amount: number; currency: string }> | undefined;
+                  const price = offerRetail?.amount ?? retailTotal?.[0]?.amount;
+                  const originalPrice = suggestedPrice?.[0]?.amount;
+                  const cur = offerRetail?.currency ?? retailTotal?.[0]?.currency ?? currency;
+
+                  parsedRooms.push({
+                    offerId: offerId || `room-${parsedRooms.length}`,
+                    roomName: (rate.name as string) || "Room",
+                    boardName: (rate.boardName as string) || (rate.boardType as string) || "Room Only",
+                    currency: cur,
+                    retailRate: price || 0,
+                    originalRate: originalPrice,
+                    maxOccupancy: (rate.maxOccupancy as number) || 2,
+                    images: imgUrls.length > 0 ? imgUrls : undefined,
+                    cancellationPolicy: rate.cancellationPolicies as RoomData["cancellationPolicy"],
+                  });
+                });
+              });
+            }
+            setRooms(parsedRooms);
+          }
         }
       } catch (error) {
         console.error("Failed to load hotel:", error);
@@ -161,6 +313,44 @@ export default function HotelDetailPage() {
     router.push("/checkout");
   }
 
+  function scrollToRooms() {
+    document.getElementById("section-rooms")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function scrollToReviews() {
+    document.getElementById("section-reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  const filteredReviews = useMemo(() => {
+    let result = [...reviews];
+    if (travelerFilter) {
+      result = result.filter((r) => r.type === travelerFilter);
+    }
+    switch (reviewSort) {
+      case "newest":
+        result.sort((a, b) => {
+          if (!a.date || !b.date) return 0;
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
+        break;
+      case "highest":
+        result.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+        break;
+      case "lowest":
+        result.sort((a, b) => (a.rating ?? 0) - (b.rating ?? 0));
+        break;
+    }
+    return result;
+  }, [reviews, reviewSort, travelerFilter]);
+
+  const availableTravelerTypes = useMemo(() => {
+    const types = new Set<string>();
+    reviews.forEach((r) => {
+      if (r.type) types.add(r.type);
+    });
+    return Array.from(types);
+  }, [reviews]);
+
   if (loading) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center">
@@ -172,136 +362,366 @@ export default function HotelDetailPage() {
   if (!hotel) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center">
-        <p className="text-text-muted">Hotel not found</p>
+        <p className="text-text-muted">{t("notFound")}</p>
       </div>
     );
   }
 
-  const tabs = [
-    { id: "overview" as const, label: t("overview") },
-    { id: "rooms" as const, label: t("rooms") },
-    { id: "amenities" as const, label: t("amenities") },
-    { id: "reviews" as const, label: t("reviews") },
-    { id: "location" as const, label: t("location") },
+  const quickAmenities = getQuickAmenities(hotel.facilities);
+  const ratingLabel = hotel.reviewScore ? getStarRatingText(hotel.reviewScore) : "";
+  const descriptionText = hotel.hotelDescription.replace(/<[^>]*>/g, "");
+  const isLongDesc = descriptionText.length > 400;
+  const lowestPrice = rooms.length > 0 ? Math.min(...rooms.map((r) => r.retailRate)) : 0;
+  const roomCurrency = rooms[0]?.currency || currency;
+  const ci = searchParams.get("checkIn") || checkIn;
+  const co = searchParams.get("checkOut") || checkOut;
+
+  const tabSections: TabSection[] = [
+    { id: "section-overview", label: "overview", icon: LayoutGrid },
+    { id: "section-facilities", label: "facilities", icon: Building, count: hotel.facilities.length },
+    { id: "section-rooms", label: "rooms", icon: Bed, count: rooms.length },
+    { id: "section-reviews", label: "reviews", icon: MessageSquareText, count: reviews.length },
+    { id: "section-description", label: "description", icon: FileText },
+    { id: "section-location", label: "location", icon: MapPin },
   ];
 
   return (
-    <div className="pt-20 min-h-screen bg-white">
+    <div className="pt-20 min-h-screen bg-white pb-20 sm:pb-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-2 text-sm text-text-muted mb-4">
+          <Link href="/" className="hover:text-accent transition-colors">
+            {t("breadcrumbHome")}
+          </Link>
+          <ChevronRight size={12} />
+          {location && (
+            <>
+              <span className="text-text-secondary">
+                {t("breadcrumbHotels", { location })}
+              </span>
+              <ChevronRight size={12} />
+            </>
+          )}
+          <span className="text-text-primary font-medium truncate max-w-[200px]">
+            {hotel.name}
+          </span>
+        </nav>
+
         {/* Gallery */}
         <HotelGallery images={hotel.images} hotelName={hotel.name} />
 
         {/* Hotel Header */}
-        <div className="mt-6 mb-8">
+        <div className="mt-6 mb-6">
           <div className="flex items-start justify-between flex-wrap gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                {hotel.starRating > 0 && (
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: hotel.starRating }).map((_, i) => (
-                      <Star key={i} size={16} className="fill-star text-star" />
-                    ))}
-                  </div>
-                )}
-              </div>
+            <div className="space-y-2">
+              {hotel.starRating > 0 && (
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: hotel.starRating }).map((_, i) => (
+                    <Star key={i} size={14} className="fill-star text-star" />
+                  ))}
+                </div>
+              )}
               <h1
-                className="text-3xl sm:text-4xl font-bold text-text-primary"
+                className="text-3xl sm:text-4xl font-bold text-text-primary leading-tight"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
                 {hotel.name}
               </h1>
-              <div className="flex items-center gap-4 mt-2 text-sm text-text-muted">
-                <div className="flex items-center gap-1">
-                  <MapPin size={14} />
+              <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-text-muted">
+                <span className="flex items-center gap-1.5">
+                  <MapPin size={14} className="shrink-0" />
                   {hotel.address}{hotel.city ? `, ${hotel.city}` : ""}{hotel.country ? `, ${hotel.country}` : ""}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock size={14} />
+                </span>
+                {hotel.latitude !== 0 && hotel.longitude !== 0 && (
+                  <>
+                    <span className="text-border">&middot;</span>
+                    <button
+                      onClick={() => setMapOpen(true)}
+                      className="text-accent font-medium hover:text-accent-hover underline underline-offset-2 transition-colors"
+                    >
+                      {t("showMap")}
+                    </button>
+                  </>
+                )}
+                <span className="hidden sm:inline text-border">|</span>
+                <span className="flex items-center gap-1.5">
+                  <Clock size={14} className="shrink-0" />
                   {t("checkInTime", { time: hotel.checkinTime })}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock size={14} />
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Clock size={14} className="shrink-0" />
                   {t("checkOutTime", { time: hotel.checkoutTime })}
-                </div>
+                </span>
               </div>
             </div>
 
-            {hotel.reviewScore !== undefined && hotel.reviewCount !== undefined && (
-              <ReviewSummary score={hotel.reviewScore} count={hotel.reviewCount} />
+            {hotel.reviewScore !== undefined && hotel.reviewCount !== undefined && hotel.reviewScore > 0 && (
+              <button
+                onClick={scrollToReviews}
+                className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-accent/20 hover:bg-bg-cream/50 transition-colors cursor-pointer"
+              >
+                <div className="bg-accent text-white text-xl font-bold w-12 h-12 rounded-lg flex items-center justify-center">
+                  {hotel.reviewScore.toFixed(1)}
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-text-primary">{ratingLabel}</p>
+                  <p className="text-xs text-text-muted">
+                    {hotel.reviewCount.toLocaleString()} review{hotel.reviewCount !== 1 ? "s" : ""}
+                  </p>
+                </div>
+              </button>
             )}
           </div>
+
+          {quickAmenities.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {quickAmenities.map(({ icon: Icon, label }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-accent bg-accent/5 px-3 py-1.5 rounded-full"
+                >
+                  <Icon size={13} />
+                  {label}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Tabs */}
-        <div className="border-b border-border mb-8">
-          <nav className="flex gap-8 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`pb-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                  activeTab === tab.id
-                    ? "border-accent text-accent"
-                    : "border-transparent text-text-muted hover:text-text-secondary"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+        {/* Sticky Tab Nav */}
+        <StickyTabNav
+          activeSection={activeSection}
+          sections={tabSections}
+          lowestPrice={lowestPrice}
+          currency={roomCurrency}
+          onSelectRoom={scrollToRooms}
+        />
+
+        {/* Section: Overview / Smart Highlights */}
+        <div id="section-overview" className="scroll-mt-[130px] pt-8 space-y-8">
+          <SmartHighlights
+            hotelName={hotel.name}
+            description={hotel.hotelDescription}
+            facilities={hotel.facilities}
+            starRating={hotel.starRating}
+            city={hotel.city}
+          />
         </div>
 
-        {/* Tab Content */}
-        {activeTab === "overview" && (
-          <div className="max-w-3xl">
-            <div
-              className="prose prose-sm text-text-secondary leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: hotel.hotelDescription }}
+        {/* Section: Popular Facilities */}
+        <div id="section-facilities" className="scroll-mt-[130px] pt-10">
+          {hotel.facilities.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <h2
+                  className="text-xl font-bold text-text-primary"
+                  style={{ fontFamily: "var(--font-playfair)" }}
+                >
+                  {t("popularFacilities")}
+                </h2>
+                <button
+                  onClick={() => document.getElementById("facilities-full")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  className="text-sm font-medium text-accent hover:text-accent-hover transition-colors cursor-pointer"
+                >
+                  {t("seeAllFacilities")} &rarr;
+                </button>
+              </div>
+              <AmenitiesList amenities={hotel.facilities} compact />
+            </div>
+          )}
+        </div>
+
+        {/* Section: Review Highlights */}
+        {hotel.reviewScore !== undefined && hotel.reviewCount !== undefined && hotel.reviewScore > 0 && (
+          <div className="pt-10">
+            <ReviewHighlights
+              score={hotel.reviewScore}
+              count={hotel.reviewCount}
+              reviews={reviews}
+              onReadAll={scrollToReviews}
             />
           </div>
         )}
 
-        {activeTab === "rooms" && (
-          <div className="space-y-4">
-            {rooms.length > 0 ? (
-              rooms.map((room) => (
-                <RoomCard key={room.offerId} room={room} onSelect={handleSelectRoom} />
-              ))
-            ) : (
-              <p className="text-text-muted text-center py-8">
-                No rooms available for the selected dates. Try different dates.
-              </p>
-            )}
-          </div>
-        )}
+        {/* Section: Rooms */}
+        <div id="section-rooms" className="scroll-mt-[130px] pt-10">
+          <RoomSection
+            rooms={rooms}
+            hotelImages={hotel.images}
+            checkIn={ci}
+            checkOut={co}
+            adults={adults}
+            children={children}
+            onSelectRoom={handleSelectRoom}
+          />
+        </div>
 
-        {activeTab === "amenities" && (
-          <AmenitiesList amenities={hotel.facilities} />
-        )}
+        {/* Section: Guest Reviews */}
+        <div id="section-reviews" className="scroll-mt-[130px] pt-10">
+          <h2
+            className="text-xl font-bold text-text-primary mb-5"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            {t("guestReviews")}
+          </h2>
 
-        {activeTab === "reviews" && (
-          <div>
-            {hotel.reviewScore !== undefined && hotel.reviewCount !== undefined && (
-              <div className="mb-6">
-                <ReviewSummary score={hotel.reviewScore} count={hotel.reviewCount} />
+          {hotel.reviewScore !== undefined && hotel.reviewCount !== undefined && hotel.reviewScore > 0 && (
+            <div className="flex items-center gap-5 mb-6 pb-5 border-b border-border">
+              <div className="bg-accent text-white text-3xl font-bold w-16 h-16 rounded-xl flex items-center justify-center">
+                {hotel.reviewScore.toFixed(1)}
               </div>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {reviews.length > 0 ? (
-                reviews.map((review, idx) => (
+              <div>
+                <p className="text-lg font-bold text-text-primary">{ratingLabel}</p>
+                <p className="text-sm text-text-muted">
+                  {t("basedOnReviews", { count: hotel.reviewCount.toLocaleString() })}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {reviews.length > 0 ? (
+            <>
+              <ReviewFilters
+                sortOrder={reviewSort}
+                travelerFilter={travelerFilter}
+                availableTypes={availableTravelerTypes}
+                onSortChange={setReviewSort}
+                onFilterChange={setTravelerFilter}
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredReviews.map((review, idx) => (
                   <ReviewCard key={idx} review={review} />
-                ))
-              ) : (
-                <p className="text-text-muted col-span-2 text-center py-8">
-                  No reviews yet for this hotel.
+                ))}
+              </div>
+              {filteredReviews.length === 0 && (
+                <p className="text-text-muted text-center py-8">
+                  No reviews match the selected filter.
                 </p>
               )}
+            </>
+          ) : (
+            <p className="text-text-muted text-center py-8">
+              {t("noReviews")}
+            </p>
+          )}
+        </div>
+
+        {/* Section: Property Description */}
+        <div id="section-description" className="scroll-mt-[130px] pt-10">
+          <div className="max-w-4xl bg-white rounded-xl border border-border p-6">
+            <h2
+              className="text-xl font-bold text-text-primary mb-5"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              {t("propertyDescription")}
+            </h2>
+            <div className="relative">
+              <div
+                className={`prose prose-sm text-text-secondary leading-relaxed max-w-none ${!descExpanded && isLongDesc ? "max-h-[250px] overflow-hidden" : ""}`}
+                dangerouslySetInnerHTML={{ __html: hotel.hotelDescription }}
+              />
+              {isLongDesc && !descExpanded && (
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-white to-transparent" />
+              )}
             </div>
+            {isLongDesc && (
+              <button
+                onClick={() => setDescExpanded(!descExpanded)}
+                className="flex items-center gap-1 mt-3 text-sm font-medium text-accent hover:text-accent-hover transition-colors cursor-pointer"
+              >
+                {descExpanded ? t("showLess") : t("readMore")}
+                <ChevronDown size={14} className={`transition-transform ${descExpanded ? "rotate-180" : ""}`} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Full Facilities */}
+        {hotel.facilities.length > 0 && (
+          <div id="facilities-full" className="scroll-mt-[130px] pt-10">
+            <h2
+              className="text-xl font-bold text-text-primary mb-5"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              {t("amenities")}
+            </h2>
+            <AmenitiesList amenities={hotel.facilities} />
           </div>
         )}
 
-        {activeTab === "location" && hotel.latitude && hotel.longitude && (
-          <div className="h-[400px] rounded-xl overflow-hidden">
+        {/* Section: Location / Inline Map */}
+        <div id="section-location" className="scroll-mt-[130px] pt-10 pb-8">
+          <h2
+            className="text-xl font-bold text-text-primary mb-5"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            {t("location")}
+          </h2>
+
+          {hotel.latitude !== 0 && hotel.longitude !== 0 && (
+            <div className="rounded-xl overflow-hidden border border-border">
+              <HotelMap
+                compact
+                hotels={[{
+                  hotelId: hotel.id,
+                  name: hotel.name,
+                  latitude: hotel.latitude,
+                  longitude: hotel.longitude,
+                }]}
+                center={{ lat: hotel.latitude, lng: hotel.longitude }}
+              />
+            </div>
+          )}
+
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center gap-2 text-sm text-text-secondary">
+              <MapPin size={14} className="text-accent" />
+              {hotel.address}{hotel.city ? `, ${hotel.city}` : ""}{hotel.country ? `, ${hotel.country}` : ""}
+            </div>
+            {hotel.latitude !== 0 && hotel.longitude !== 0 && (
+              <button
+                onClick={() => setMapOpen(true)}
+                className="text-sm font-medium text-accent hover:text-accent-hover transition-colors"
+              >
+                {t("viewLargerMap")} &rarr;
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Booking Bar */}
+      {lowestPrice > 0 && (
+        <MobileBookingBar
+          lowestPrice={lowestPrice}
+          currency={roomCurrency}
+          onSelectRoom={scrollToRooms}
+        />
+      )}
+
+      {/* Fullscreen Map Overlay */}
+      {mapOpen && hotel.latitude !== 0 && hotel.longitude !== 0 && (
+        <div className="fixed inset-0 z-200 bg-white flex flex-col">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-border bg-white shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <MapPin size={16} className="text-accent shrink-0" />
+              <p className="text-sm font-medium text-text-primary truncate">
+                {hotel.name}
+              </p>
+              <span className="text-xs text-text-muted hidden sm:inline">
+                — {hotel.address}{hotel.city ? `, ${hotel.city}` : ""}
+              </span>
+            </div>
+            <button
+              onClick={() => setMapOpen(false)}
+              className="p-2 rounded-lg hover:bg-bg-cream transition-colors shrink-0"
+            >
+              <X size={20} className="text-text-secondary" />
+            </button>
+          </div>
+
+          <div className="flex-1 relative">
             <HotelMap
               hotels={[{
                 hotelId: hotel.id,
@@ -311,9 +731,19 @@ export default function HotelDetailPage() {
               }]}
               center={{ lat: hotel.latitude, lng: hotel.longitude }}
             />
+            <button
+              onClick={() => {
+                setMapOpen(false);
+                setTimeout(() => setMapOpen(true), 50);
+              }}
+              className="absolute bottom-6 left-4 flex items-center gap-2 px-4 py-2.5 bg-white rounded-full shadow-lg border border-border text-sm font-medium text-text-primary hover:bg-bg-cream transition-colors"
+            >
+              <LocateFixed size={16} className="text-accent" />
+              Re-center
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

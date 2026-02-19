@@ -78,6 +78,17 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading), Georgia, serif;
   }
+
+  button,
+  a,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  select,
+  summary {
+    cursor: pointer;
+  }
 }
 
 @layer utilities {
@@ -168,6 +179,19 @@
   .animate-badge-float {
     animation: badgeFloat 4s ease-in-out infinite;
   }
+
+  /* Branded spinner animations */
+  .animate-logo-spin {
+    animation: logoSpin 1.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  }
+  .animate-logo-breathe {
+    animation: logoBreathe 2s ease-in-out infinite;
+  }
+
+  /* Smooth content transition */
+  .animate-results-in {
+    animation: resultsIn 0.4s ease-out both;
+  }
 }
 
 @keyframes fadeUp {
@@ -217,6 +241,18 @@
 @keyframes kenBurns {
   0% { transform: scale(1); }
   100% { transform: scale(1.05); }
+}
+@keyframes logoSpin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes logoBreathe {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50%      { transform: scale(1.08); opacity: 1; }
+}
+@keyframes resultsIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {

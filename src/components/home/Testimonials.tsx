@@ -82,7 +82,7 @@ export default function Testimonials() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {TESTIMONIALS.map((testimonial, index) => (
             <div
-              key={index}
+              key={testimonial.name}
               className={`bg-white/5 backdrop-blur-sm rounded-2xl p-7 sm:p-8 border border-white/10 hover:border-accent-bright/30 hover:bg-white/8 hover:-translate-y-1 transition-all duration-300 ${
                 gridVisible ? `animate-fade-up stagger-${index + 1}` : "scroll-hidden"
               }`}
