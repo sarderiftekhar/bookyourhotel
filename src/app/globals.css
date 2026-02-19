@@ -192,6 +192,11 @@
   .animate-results-in {
     animation: resultsIn 0.4s ease-out both;
   }
+
+  /* --- Destination slider: Ken Burns slow zoom on active image --- */
+  .dest-ken-burns {
+    animation: destKenBurns 5.5s ease-out forwards;
+  }
 }
 
 @keyframes fadeUp {
@@ -253,6 +258,12 @@
 @keyframes resultsIn {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Destination slider: Ken Burns */
+@keyframes destKenBurns {
+  0%   { transform: scale(1); }
+  100% { transform: scale(1.06); }
 }
 
 @media (prefers-reduced-motion: reduce) {
