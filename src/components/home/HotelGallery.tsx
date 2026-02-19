@@ -1,74 +1,266 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Link } from "@/i18n/routing";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
-const GALLERY_IMAGES = [
-  { src: "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=600&q=80", alt: "Luxury hotel bedroom", rotate: "-3deg", size: "w-44 h-56 sm:w-52 sm:h-64" },
-  { src: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80", alt: "Hotel bathroom", rotate: "2deg", size: "w-36 h-48 sm:w-44 sm:h-56" },
-  { src: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600&q=80", alt: "Hotel exterior view", rotate: "-1deg", size: "w-48 h-60 sm:w-56 sm:h-72" },
-  { src: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=600&q=80", alt: "Hotel pool area", rotate: "3deg", size: "w-40 h-52 sm:w-48 sm:h-60" },
-  { src: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80", alt: "Hotel room interior", rotate: "-2deg", size: "w-44 h-56 sm:w-52 sm:h-64" },
+/* ─── slide data ─── */
+const SLIDES = [
+  {
+    image: "https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=1600&q=85",
+    alt: "Overwater bungalows in the Maldives with turquoise lagoon",
+    heading: "Escape to Paradise",
+    description:
+      "Step into crystal-clear lagoons and overwater villas. The Maldives, Bora Bora, and beyond — your dream beach escape awaits.",
+    cta: "Explore Beach Hotels",
+    side: "left" as const,
+  },
+  {
+    image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600&q=85",
+    alt: "Luxury resort pool with palm trees at golden hour",
+    heading: "Luxury Redefined",
+    description:
+      "Handpicked 5-star resorts with world-class service. From private pools to Michelin dining — every detail crafted for you.",
+    cta: "Browse Luxury Stays",
+    side: "right" as const,
+  },
+  {
+    image: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=1600&q=85",
+    alt: "Stunning tropical beach with palm trees and clear ocean",
+    heading: "Sun, Sand & Serenity",
+    description:
+      "Golden sands, swaying palms, and endless horizons. Find the perfect beachfront hotel for your next unforgettable holiday.",
+    cta: "Find Beach Resorts",
+    side: "left" as const,
+  },
+  {
+    image: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=1600&q=85",
+    alt: "Elegant hotel room with ocean view and luxury furnishings",
+    heading: "Unwind in Style",
+    description:
+      "Wake up to breathtaking ocean views from your private suite. Infinity pools, rooftop bars, and spa sanctuaries await.",
+    cta: "View Resort Hotels",
+    side: "right" as const,
+  },
+  {
+    image: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1600&q=85",
+    alt: "Infinity pool overlooking tropical coastline at sunset",
+    heading: "Your Dream Getaway",
+    description:
+      "From cliffside infinity pools to secluded island retreats — over 2 million hotels at prices you won't find anywhere else.",
+    cta: "Start Your Journey",
+    side: "left" as const,
+  },
 ];
 
+const INTERVAL = 5000;
+
 export default function HotelGallery() {
-  const { ref, isVisible } = useScrollAnimation();
+  const { ref: scrollRef, isVisible } = useScrollAnimation();
+  const [active, setActive] = useState(0);
+  const [prevActive, setPrevActive] = useState<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  const goTo = useCallback(
+    (idx: number) => {
+      if (idx === active) return;
+      setPrevActive(active);
+      setActive(idx);
+      // Clear previous "leaving" state after transition completes
+      setTimeout(() => setPrevActive(null), 1000);
+    },
+    [active]
+  );
+
+  /* auto-play */
+  useEffect(() => {
+    if (!isVisible) return;
+    timerRef.current = setTimeout(() => {
+      goTo((active + 1) % SLIDES.length);
+    }, INTERVAL);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [active, isVisible, goTo]);
+
+  /* keyboard nav */
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      // Only handle if section is visible in viewport
+      if (!sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      if (rect.top > window.innerHeight || rect.bottom < 0) return;
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+        e.preventDefault();
+        goTo((active + 1) % SLIDES.length);
+      } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        goTo((active - 1 + SLIDES.length) % SLIDES.length);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [active, goTo]);
 
   return (
-    <section className="py-20 sm:py-28 bg-bg-cream overflow-hidden">
-      <div ref={ref} className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${isVisible ? "animate-fade-up" : "scroll-hidden"}`}>
-        {/* Scattered gallery layout */}
-        <div className="relative flex items-center justify-center min-h-[400px] sm:min-h-[480px]">
-          {/* Left images */}
-          <div className="hidden md:flex flex-col gap-4 absolute left-0 top-1/2 -translate-y-1/2">
-            <div className={`${GALLERY_IMAGES[0].size} rounded-2xl overflow-hidden shadow-lg animate-float`} style={{ transform: `rotate(${GALLERY_IMAGES[0].rotate})` }}>
-              <Image src={GALLERY_IMAGES[0].src} alt={GALLERY_IMAGES[0].alt} fill className="object-cover" sizes="220px" />
-            </div>
-            <div className={`${GALLERY_IMAGES[1].size} rounded-2xl overflow-hidden shadow-lg ml-8 animate-float-delayed`} style={{ transform: `rotate(${GALLERY_IMAGES[1].rotate})` }}>
-              <Image src={GALLERY_IMAGES[1].src} alt={GALLERY_IMAGES[1].alt} fill className="object-cover" sizes="180px" />
-            </div>
-          </div>
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden bg-[#0f1c1a]"
+      style={{ height: "clamp(500px, 80vh, 750px)" }}
+    >
+      {/* Invisible scroll trigger */}
+      <div ref={scrollRef} className="absolute top-1/2 left-0 w-px h-px" />
+      {/* ─── Slides ─── */}
+      {SLIDES.map((slide, i) => {
+        const isActive = i === active;
+        const isLeaving = i === prevActive;
+        const imageOnLeft = slide.side === "left";
 
-          {/* Center CTA Card */}
-          <div className="relative z-10 bg-accent text-white rounded-3xl p-8 sm:p-10 max-w-sm mx-auto text-center shadow-2xl">
-            <h3
-              className="text-2xl sm:text-3xl font-bold mb-3 leading-tight"
-              style={{ fontFamily: "var(--font-playfair)" }}
+        return (
+          <div
+            key={i}
+            className="absolute inset-0 w-full h-full"
+            style={{
+              zIndex: isActive ? 3 : isLeaving ? 2 : 1,
+              pointerEvents: isActive ? "auto" : "none",
+            }}
+          >
+            {/* ── Left Half ── */}
+            <div
+              className="skw-half skw-half--left"
+              style={{
+                transform: isActive
+                  ? "translate3d(0,0,0)"
+                  : isLeaving
+                  ? "translate3d(0,0,0)"
+                  : "translate3d(-32vh, 100%, 0)",
+              }}
             >
-              Join our community of travelers and experience unforgettable stays
-            </h3>
-            <p className="text-white/60 text-sm mb-6">
-              Over 2 million hotels at the best prices
-            </p>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 bg-white text-accent font-semibold px-6 py-3 rounded-full text-sm hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              <div className="skw-skewed">
+                <div
+                  className={`skw-content skw-content--left ${
+                    isLeaving ? "skw-content--leaving" : ""
+                  }`}
+                >
+                  {imageOnLeft ? (
+                    <div className="absolute inset-0">
+                      <Image
+                        src={slide.image}
+                        alt={slide.alt}
+                        fill
+                        className="object-cover"
+                        sizes="60vw"
+                        priority={i < 2}
+                      />
+                      <div className="absolute inset-0 bg-black/20" />
+                    </div>
+                  ) : (
+                    <div className="relative z-10 flex flex-col items-center justify-center h-full px-8 sm:px-16 lg:px-24 text-center">
+                      <h3
+                        className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight"
+                        style={{ fontFamily: "var(--font-playfair)" }}
+                      >
+                        {slide.heading}
+                      </h3>
+                      <p className="text-white/70 text-sm sm:text-base max-w-md mb-6 leading-relaxed">
+                        {slide.description}
+                      </p>
+                      <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 bg-accent-bright text-white font-semibold px-6 py-3 rounded-full text-sm hover:bg-accent-bright/90 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
+                      >
+                        {slide.cta}
+                        <ArrowRight size={16} />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Right Half ── */}
+            <div
+              className="skw-half skw-half--right"
+              style={{
+                transform: isActive
+                  ? "translate3d(0,0,0)"
+                  : isLeaving
+                  ? "translate3d(0,0,0)"
+                  : "translate3d(32vh, -100%, 0)",
+              }}
             >
-              support@bookyourhotel.online
-              <ArrowRight size={16} />
-            </Link>
-          </div>
-
-          {/* Right images */}
-          <div className="hidden md:flex flex-col gap-4 absolute right-0 top-1/2 -translate-y-1/2">
-            <div className={`${GALLERY_IMAGES[3].size} rounded-2xl overflow-hidden shadow-lg ml-auto animate-float-delayed`} style={{ transform: `rotate(${GALLERY_IMAGES[3].rotate})` }}>
-              <Image src={GALLERY_IMAGES[3].src} alt={GALLERY_IMAGES[3].alt} fill className="object-cover" sizes="200px" />
+              <div className="skw-skewed skw-skewed--right">
+                <div
+                  className={`skw-content skw-content--right ${
+                    isLeaving ? "skw-content--leaving" : ""
+                  }`}
+                >
+                  {!imageOnLeft ? (
+                    <div className="absolute inset-0">
+                      <Image
+                        src={slide.image}
+                        alt={slide.alt}
+                        fill
+                        className="object-cover"
+                        sizes="60vw"
+                        priority={i < 2}
+                      />
+                      <div className="absolute inset-0 bg-black/20" />
+                    </div>
+                  ) : (
+                    <div className="relative z-10 flex flex-col items-center justify-center h-full px-8 sm:px-16 lg:px-24 text-center">
+                      <h3
+                        className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight"
+                        style={{ fontFamily: "var(--font-playfair)" }}
+                      >
+                        {slide.heading}
+                      </h3>
+                      <p className="text-white/70 text-sm sm:text-base max-w-md mb-6 leading-relaxed">
+                        {slide.description}
+                      </p>
+                      <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 bg-accent-bright text-white font-semibold px-6 py-3 rounded-full text-sm hover:bg-accent-bright/90 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
+                      >
+                        {slide.cta}
+                        <ArrowRight size={16} />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className={`${GALLERY_IMAGES[4].size} rounded-2xl overflow-hidden shadow-lg mr-8 animate-float`} style={{ transform: `rotate(${GALLERY_IMAGES[4].rotate})` }}>
-              <Image src={GALLERY_IMAGES[4].src} alt={GALLERY_IMAGES[4].alt} fill className="object-cover" sizes="220px" />
-            </div>
           </div>
+        );
+      })}
 
-          {/* Mobile: show 2 images flanking the card */}
-          <div className="md:hidden absolute left-2 top-4 w-24 h-32 rounded-xl overflow-hidden shadow-lg opacity-60 -rotate-3">
-            <Image src={GALLERY_IMAGES[0].src} alt={GALLERY_IMAGES[0].alt} fill className="object-cover" sizes="96px" />
-          </div>
-          <div className="md:hidden absolute right-2 bottom-4 w-24 h-32 rounded-xl overflow-hidden shadow-lg opacity-60 rotate-3">
-            <Image src={GALLERY_IMAGES[3].src} alt={GALLERY_IMAGES[3].alt} fill className="object-cover" sizes="96px" />
-          </div>
-        </div>
+      {/* ─── Pagination dots ─── */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+        {SLIDES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            className={`rounded-full transition-all duration-500 ${
+              i === active
+                ? "w-8 h-2.5 bg-accent-bright"
+                : "w-2.5 h-2.5 bg-white/40 hover:bg-white/70"
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* ─── Scroll hint ─── */}
+      <div className="absolute bottom-6 right-6 z-20 text-white/30 animate-bounce hidden lg:block">
+        <ChevronDown size={20} />
+      </div>
+
+      {/* ─── Slide counter ─── */}
+      <div className="absolute top-6 right-6 z-20 text-white/50 text-xs font-mono tracking-widest">
+        {String(active + 1).padStart(2, "0")} / {String(SLIDES.length).padStart(2, "0")}
       </div>
     </section>
   );

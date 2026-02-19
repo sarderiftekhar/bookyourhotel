@@ -10,8 +10,8 @@ export default function HomePage() {
     <>
       <Hero />
       <PopularDestinations />
-      <HowItWorks />
       <Testimonials />
+      <HowItWorks />
       <HotelGallery />
       <Newsletter />
     </>

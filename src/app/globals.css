@@ -313,3 +313,97 @@
 .rdp {
   --rdp-accent-color: var(--color-accent) !important;
 }
+
+/* ─── Skewed split-screen slider ─── */
+@layer base {
+  .skw-half {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    transition: transform 1s cubic-bezier(0.77, 0, 0.175, 1);
+    overflow: hidden;
+  }
+  .skw-half--left {
+    left: 0;
+  }
+  .skw-half--right {
+    left: 50%;
+  }
+  .skw-skewed {
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    width: 140%;
+    height: 100%;
+    transform: skewX(-18deg);
+    background: #0f1c1a;
+  }
+  .skw-half--left .skw-skewed {
+    left: -40%;
+  }
+  .skw-skewed--right {
+    right: -40%;
+    left: auto;
+  }
+  .skw-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    transform: skewX(18deg);
+    transition: transform 1s cubic-bezier(0.77, 0, 0.175, 1),
+                opacity 1s cubic-bezier(0.77, 0, 0.175, 1);
+  }
+  .skw-content--left {
+    transform-origin: 100% 0;
+  }
+  .skw-content--right {
+    transform-origin: 0 100%;
+  }
+  .skw-content--leaving {
+    opacity: 0.3;
+    transform: skewX(18deg) scale(0.95);
+  }
+}
+
+/* Skewed slider — mobile override: stack vertically */
+@layer base {
+  @media (max-width: 767px) {
+    .skw-half {
+      width: 100%;
+      height: 50%;
+    }
+    .skw-half--left {
+      top: 0;
+      left: 0;
+    }
+    .skw-half--right {
+      top: 50%;
+      left: 0;
+    }
+    .skw-skewed {
+      width: 100%;
+      height: 140%;
+      transform: skewY(-8deg);
+    }
+    .skw-half--left .skw-skewed {
+      left: 0;
+      top: -20%;
+    }
+    .skw-skewed--right {
+      right: auto;
+      left: 0;
+      bottom: -20%;
+      top: auto;
+    }
+    .skw-content {
+      transform: skewY(8deg);
+    }
+    .skw-content--leaving {
+      opacity: 0.3;
+      transform: skewY(8deg) scale(0.95);
+    }
+  }
+}
