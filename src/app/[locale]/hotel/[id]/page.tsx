@@ -434,9 +434,12 @@ function HotelDetailPageInner() {
           <ChevronRight size={12} />
           {location && (
             <>
-              <span className="text-text-secondary">
+              <Link
+                href={`/hotels/${encodeURIComponent(location)}`}
+                className="hover:text-accent transition-colors"
+              >
                 {t("breadcrumbHotels", { location })}
-              </span>
+              </Link>
               <ChevronRight size={12} />
             </>
           )}

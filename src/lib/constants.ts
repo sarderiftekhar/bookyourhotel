@@ -39,6 +39,31 @@ export const DEFAULT_CURRENCY = "USD";
 
 export const LITEAPI_BASE_URL = "https://api.liteapi.travel/v3.0";
 
+/** Map country code (from navigator.language region) → currency code */
+export const COUNTRY_TO_CURRENCY: Record<string, string> = {
+  // Americas
+  US: "USD", CA: "CAD", MX: "MXN", BR: "BRL", NZ: "USD",
+  // Europe
+  GB: "GBP", FR: "EUR", DE: "EUR", ES: "EUR", IT: "EUR", NL: "EUR",
+  BE: "EUR", AT: "EUR", PT: "EUR", IE: "EUR", FI: "EUR", GR: "EUR",
+  CH: "CHF",
+  // Middle East
+  AE: "AED", SA: "SAR", QA: "SAR", KW: "SAR", BH: "SAR", OM: "SAR",
+  // Asia
+  JP: "JPY", CN: "CNY", IN: "INR", KR: "KRW", SG: "SGD",
+  TH: "THB", MY: "MYR", ID: "IDR", PH: "PHP",
+  // Oceania
+  AU: "AUD",
+  // Other
+  TR: "TRY",
+};
+
+/** Fallback: language code → currency (when no country region in locale, e.g. "ar") */
+export const LANG_TO_CURRENCY: Record<string, string> = {
+  ar: "AED", ja: "JPY", zh: "CNY", ko: "KRW", tr: "TRY",
+  pt: "BRL", hi: "INR", th: "THB", ms: "MYR", id: "IDR",
+};
+
 export const FEATURED_DESTINATIONS = [
   { name: "Dubai", country: "UAE", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80", slug: "dubai" },
   { name: "London", country: "United Kingdom", image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&q=80", slug: "london" },
