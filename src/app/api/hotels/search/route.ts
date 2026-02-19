@@ -181,7 +181,10 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ data: merged });
+    // Filter out hotels with no useful data (failed detail fetch on sandbox)
+    const validHotels = merged.filter((h) => h.name !== "Unknown Hotel" || h.main_photo);
+
+    return NextResponse.json({ data: validHotels });
   } catch (error) {
     console.error("Hotel search error:", error);
     return NextResponse.json(

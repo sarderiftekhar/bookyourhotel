@@ -9,7 +9,7 @@ interface SpinnerProps {
 
 /**
  * Branded BookYourHotel loading spinner.
- * Shows the "ZZ" logo with orbiting dots and a breathing pulse.
+ * Shows the "Byh" logo with orbiting dots and a breathing pulse.
  */
 export default function Spinner({ size = 48, className }: SpinnerProps) {
   const scale = size / 48;
@@ -38,7 +38,7 @@ export default function Spinner({ size = 48, className }: SpinnerProps) {
           />
           {/* Orbiting dot 2 (opposite) */}
           <span
-            className="absolute rounded-full bg-accent-bright/40"
+            className="absolute rounded-full bg-accent/40"
             style={{
               width: 5 * scale,
               height: 5 * scale,
@@ -52,14 +52,16 @@ export default function Spinner({ size = 48, className }: SpinnerProps) {
         {/* Center logo text */}
         <div className="absolute inset-0 flex items-center justify-center animate-logo-breathe">
           <span
-            className="font-bold tracking-tight select-none"
+            className="select-none"
             style={{
-              fontFamily: "var(--font-playfair)",
-              fontSize: 18 * scale,
+              fontFamily: "var(--font-ephesis)",
+              fontSize: 24 * scale,
               lineHeight: 1,
+              WebkitTextStroke: `${0.4 * scale}px`,
             }}
           >
-            <span className="text-accent">ZZ</span>
+            <span className="text-accent-bright">B</span>
+            <span className="text-accent">yh</span>
           </span>
         </div>
       </div>

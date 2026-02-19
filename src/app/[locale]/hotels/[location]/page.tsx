@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Map, List, SlidersHorizontal, X, ChevronRight } from "lucide-react";
+import { Map, List, SlidersHorizontal, X, ChevronRight, ChevronLeft } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { useSearchStore } from "@/store/searchStore";
 import { usePreferencesStore } from "@/store/preferencesStore";
@@ -50,11 +50,14 @@ function HotelsPageInner() {
   const { checkIn, checkOut, adults, children, rooms } = useSearchStore();
   const { currency } = usePreferencesStore();
 
+  const HOTELS_PER_PAGE = 10;
+
   const [hotels, setHotels] = useState<HotelResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("price_asc");
+  const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<FilterState>({
     minPrice: 0,
     maxPrice: 10000,
@@ -63,12 +66,11 @@ function HotelsPageInner() {
     freeCancellation: false,
   });
 
-  // A key that changes on filter/sort change to trigger re-entrance animation
-  const resultKey = useMemo(
-    () =>
-      `${filters.starRatings.join(",")}-${filters.boardTypes.join(",")}-${filters.freeCancellation}-${filters.minPrice}-${filters.maxPrice}-${sortBy}`,
-    [filters, sortBy]
-  );
+  // Reset page when filters or sort change
+  const resultKey = useMemo(() => {
+    setCurrentPage(1);
+    return `${filters.starRatings.join(",")}-${filters.boardTypes.join(",")}-${filters.freeCancellation}-${filters.minPrice}-${filters.maxPrice}-${sortBy}`;
+  }, [filters, sortBy]);
 
   useEffect(() => {
     async function searchHotels() {
@@ -177,6 +179,18 @@ function HotelsPageInner() {
           return 0;
       }
     });
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredHotels.length / HOTELS_PER_PAGE));
+  const paginatedHotels = filteredHotels.slice(
+    (currentPage - 1) * HOTELS_PER_PAGE,
+    currentPage * HOTELS_PER_PAGE
+  );
+
+  function goToPage(page: number) {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   // Active filter chips
   const activeChips: { label: string; key: string; onRemove: () => void }[] = [];
@@ -370,9 +384,67 @@ function HotelsPageInner() {
                 <p className="text-sm text-text-muted">{t("adjustFilters")}</p>
               </div>
             ) : viewMode === "list" ? (
-              <div key={resultKey} className="animate-results-in">
-                <HotelGrid hotels={filteredHotels} />
-              </div>
+              <>
+                <div key={`${resultKey}-${currentPage}`} className="animate-results-in">
+                  <HotelGrid hotels={paginatedHotels} />
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-1.5 mt-8 mb-4">
+                    <button
+                      onClick={() => goToPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white hover:shadow-md active:scale-95"
+                    >
+                      <ChevronLeft size={18} className="text-text-secondary" />
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter((p) => {
+                        if (p === 1 || p === totalPages) return true;
+                        if (Math.abs(p - currentPage) <= 1) return true;
+                        return false;
+                      })
+                      .reduce<(number | "ellipsis")[]>((acc, p, i, arr) => {
+                        if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("ellipsis");
+                        acc.push(p);
+                        return acc;
+                      }, [])
+                      .map((item, i) =>
+                        item === "ellipsis" ? (
+                          <span key={`e-${i}`} className="w-10 h-10 flex items-center justify-center text-text-muted text-sm">
+                            &hellip;
+                          </span>
+                        ) : (
+                          <button
+                            key={item}
+                            onClick={() => goToPage(item as number)}
+                            className={`w-10 h-10 rounded-full text-sm font-semibold flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 ${
+                              currentPage === item
+                                ? "bg-accent text-white shadow-md shadow-accent/30"
+                                : "text-text-secondary hover:bg-white hover:shadow-md"
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        )
+                      )}
+
+                    <button
+                      onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white hover:shadow-md active:scale-95"
+                    >
+                      <ChevronRight size={18} className="text-text-secondary" />
+                    </button>
+
+                    <span className="ml-3 text-xs text-text-muted">
+                      {(currentPage - 1) * HOTELS_PER_PAGE + 1}–{Math.min(currentPage * HOTELS_PER_PAGE, filteredHotels.length)} of {filteredHotels.length}
+                    </span>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="h-[600px] rounded-3xl overflow-hidden shadow-sm">
                 <HotelMap hotels={mappableHotels} />
