@@ -83,7 +83,7 @@ export default function HotelCard({ hotel }: HotelCardProps) {
         <div className="flex flex-col sm:flex-row min-w-0">
           {/* Image Carousel */}
           <div
-            className="relative w-full sm:w-52 lg:w-64 h-52 sm:h-auto sm:min-h-[220px] shrink-0 overflow-hidden"
+            className="relative w-full sm:w-60 lg:w-72 h-56 sm:h-auto sm:min-h-[260px] shrink-0 overflow-hidden"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
           >
@@ -251,7 +251,7 @@ export default function HotelCard({ hotel }: HotelCardProps) {
               )}
               <button
                 onClick={(e) => e.preventDefault()}
-                className="bg-accent hover:bg-accent-hover active:scale-95 text-white text-sm font-bold px-7 py-3 rounded-full transition-all duration-200 cursor-pointer"
+                className="bg-accent hover:bg-accent-hover active:scale-95 text-white text-sm font-bold px-6 py-3.5 rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap"
               >
                 {ts("showPrices")}
               </button>

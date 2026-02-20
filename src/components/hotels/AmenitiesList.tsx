@@ -322,12 +322,12 @@ export default function AmenitiesList({ amenities, compact, hotelName }: Ameniti
           return (
             <div
               key={amenity}
-              className="flex items-center gap-3 px-4 py-3.5 bg-accent/4 border border-accent/10 rounded-xl transition-all duration-200 hover:bg-accent/8 hover:border-accent/20 hover:shadow-sm"
+              className="flex items-center gap-3 px-4 py-3.5 bg-accent/80 rounded-xl transition-all duration-200 hover:bg-accent hover:shadow-sm"
             >
-              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                <Icon size={16} className="text-accent" />
+              <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                <Icon size={16} className="text-white" />
               </div>
-              <span className="text-sm font-medium text-text-primary leading-tight">{amenity}</span>
+              <span className="text-sm font-medium text-white leading-tight">{amenity}</span>
             </div>
           );
         })}
@@ -358,9 +358,9 @@ export default function AmenitiesList({ amenities, compact, hotelName }: Ameniti
               return (
                 <span
                   key={amenity}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-text-primary bg-bg-cream border border-border/60 px-3.5 py-2 rounded-full transition-colors duration-200 hover:border-accent/30 hover:bg-accent/5"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-white bg-accent px-3.5 py-2 rounded-full transition-all duration-200 hover:bg-accent-hover hover:shadow-md"
                 >
-                  <Icon size={14} className="text-accent shrink-0" />
+                  <Icon size={14} className="text-white/80 shrink-0" />
                   {amenity}
                 </span>
               );

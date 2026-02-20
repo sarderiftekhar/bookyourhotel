@@ -48,46 +48,64 @@ export default function SearchWidget({ compact = false }: SearchWidgetProps) {
   return (
     <div
       role="search"
-      className={`bg-white rounded-full shadow-xl border border-border/40 ${compact ? "p-1" : "p-1.5 sm:p-2"} max-w-5xl mx-auto`}
+      className={`bg-white shadow-xl border border-border/40 max-w-5xl mx-auto rounded-2xl lg:rounded-full ${compact ? "p-1" : "p-3 sm:p-3 lg:p-2"}`}
       onKeyDown={handleKeyDown}
     >
-      <div className="flex flex-col lg:flex-row items-stretch">
-        {/* Location */}
+      {/* Desktop: single row pill layout */}
+      <div className="hidden lg:flex items-stretch">
         <div className="flex-1 min-w-0 rounded-full bg-white hover:bg-bg-cream/50 transition-colors">
           <LocationAutocomplete />
         </div>
-
-        {/* Divider */}
-        <div className="hidden lg:flex items-center">
+        <div className="flex items-center">
           <div className="w-px h-8 bg-border/60" />
         </div>
-
-        {/* Dates */}
-        <div className="flex-1 min-w-0 rounded-full bg-white hover:bg-bg-cream/50 transition-colors mt-1 lg:mt-0">
+        <div className="flex-1 min-w-0 rounded-full bg-white hover:bg-bg-cream/50 transition-colors">
           <DateRangePicker />
         </div>
-
-        {/* Divider */}
-        <div className="hidden lg:flex items-center">
+        <div className="flex items-center">
           <div className="w-px h-8 bg-border/60" />
         </div>
-
-        {/* Guests */}
-        <div className="lg:w-[260px] rounded-full bg-white hover:bg-bg-cream/50 transition-colors mt-1 lg:mt-0">
+        <div className="w-[260px] rounded-full bg-white hover:bg-bg-cream/50 transition-colors">
           <GuestSelector />
         </div>
-
-        {/* Search Button */}
-        <div className="mt-1 lg:mt-0 lg:ml-1 shrink-0">
+        <div className="ml-1 shrink-0">
           <button
             onClick={handleSearch}
             disabled={!location}
-            className="w-full lg:w-auto h-full min-h-[48px] px-7 bg-accent hover:bg-accent-hover text-white font-bold rounded-full flex items-center justify-center gap-2.5 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed text-base cursor-pointer shadow-lg shadow-accent/20"
+            className="h-full min-h-[48px] px-7 bg-accent hover:bg-accent-hover text-white font-bold rounded-full flex items-center justify-center gap-2.5 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed text-base cursor-pointer shadow-lg shadow-accent/20"
           >
             <Search size={20} />
             <span>{tc("search")}</span>
           </button>
         </div>
+      </div>
+
+      {/* Mobile: card layout with compact rows */}
+      <div className="flex flex-col gap-2 lg:hidden">
+        {/* Location — full width, prominent */}
+        <div className="rounded-xl bg-bg-cream/60 border border-border/30">
+          <LocationAutocomplete />
+        </div>
+
+        {/* Date + Guests — side by side */}
+        <div className="flex gap-2">
+          <div className="flex-1 min-w-0 rounded-xl bg-bg-cream/60 border border-border/30">
+            <DateRangePicker />
+          </div>
+          <div className="flex-1 min-w-0 rounded-xl bg-bg-cream/60 border border-border/30">
+            <GuestSelector compact />
+          </div>
+        </div>
+
+        {/* Search button — full width */}
+        <button
+          onClick={handleSearch}
+          disabled={!location}
+          className="w-full min-h-[48px] px-6 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl flex items-center justify-center gap-2.5 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed text-base cursor-pointer shadow-lg shadow-accent/20"
+        >
+          <Search size={20} />
+          <span>{tc("search")}</span>
+        </button>
       </div>
     </div>
   );

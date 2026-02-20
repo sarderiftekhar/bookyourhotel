@@ -2,7 +2,19 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, Users, Check, X, Bed } from "lucide-react";
+import {
+  Users,
+  Check,
+  X,
+  BedDouble,
+  BedSingle,
+  CigaretteOff,
+  Accessibility,
+  Mountain,
+  Waves,
+  Building,
+  type LucideIcon,
+} from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 interface RoomData {
@@ -24,209 +36,249 @@ interface RoomTypeGroupProps {
   rates: RoomData[];
   fallbackImages: string[];
   onSelectRoom: (offerId: string) => void;
+  /** When true, renders <tr> rows for a unified table (desktop). */
+  asTableRows?: boolean;
+}
+
+interface RoomFeature {
+  icon: LucideIcon;
+  label: string;
+}
+
+function parseRoomFeatures(name: string): RoomFeature[] {
+  const lower = name.toLowerCase();
+  const features: RoomFeature[] = [];
+
+  // Bed type detection
+  if (/\bking\b/.test(lower)) {
+    const count = lower.match(/(\d+)\s*king/)?.[1] || "1";
+    features.push({ icon: BedDouble, label: `${count} King Bed${count !== "1" ? "s" : ""}` });
+  } else if (/\bqueen\b/.test(lower)) {
+    const count = lower.match(/(\d+)\s*queen/)?.[1] || "1";
+    features.push({ icon: BedDouble, label: `${count} Queen Bed${count !== "1" ? "s" : ""}` });
+  } else if (/\bdouble\b/.test(lower)) {
+    const count = lower.match(/(\d+)\s*double/)?.[1] || "1";
+    features.push({ icon: BedDouble, label: `${count} Double Bed${count !== "1" ? "s" : ""}` });
+  } else if (/\btwin\b/.test(lower)) {
+    features.push({ icon: BedSingle, label: "2 Single Beds" });
+  } else if (/\bsingle\b/.test(lower)) {
+    features.push({ icon: BedSingle, label: "1 Single Bed" });
+  } else if (/\bbed\b/.test(lower)) {
+    features.push({ icon: BedDouble, label: "Bed" });
+  }
+
+  // Smoking status
+  if (/non[- ]?smoking/.test(lower) || /no[- ]?smoking/.test(lower)) {
+    features.push({ icon: CigaretteOff, label: "Non-Smoking" });
+  }
+
+  // View
+  if (/sea\s*view|ocean\s*view/.test(lower)) {
+    features.push({ icon: Waves, label: "Sea View" });
+  } else if (/mountain\s*view/.test(lower)) {
+    features.push({ icon: Mountain, label: "Mountain View" });
+  } else if (/city\s*view/.test(lower)) {
+    features.push({ icon: Building, label: "City View" });
+  } else if (/garden\s*view|pool\s*view|park\s*view/.test(lower)) {
+    features.push({ icon: Mountain, label: lower.match(/(garden|pool|park)\s*view/i)?.[0] || "View" });
+  }
+
+  // Accessibility
+  if (/accessible|wheelchair|disability|mobility/.test(lower)) {
+    features.push({ icon: Accessibility, label: "Accessible" });
+  }
+
+  return features;
 }
 
 export default function RoomTypeGroup({
   roomName,
   rates,
-  fallbackImages,
   onSelectRoom,
+  asTableRows,
 }: RoomTypeGroupProps) {
   const t = useTranslations("hotel");
-  const [imgIdx, setImgIdx] = useState(0);
   const [expanded, setExpanded] = useState(false);
 
-  const images = rates[0]?.images?.length ? rates[0].images : fallbackImages.slice(0, 3);
-  const hasMultipleImages = images.length > 1;
   const maxOccupancy = rates[0]?.maxOccupancy;
 
-  // Deduplicate rates — group identical boardName + cancellation + price
   const uniqueRates = deduplicateRates(rates);
   const visibleRates = expanded ? uniqueRates : uniqueRates.slice(0, 3);
   const hasMore = uniqueRates.length > 3;
 
-  // Best (lowest) price for the header
   const bestRate = rates.reduce((min, r) => (r.retailRate < min.retailRate ? r : min), rates[0]);
-  const bestDiscount =
-    bestRate.originalRate && bestRate.originalRate > bestRate.retailRate
-      ? Math.round((1 - bestRate.retailRate / bestRate.originalRate) * 100)
-      : 0;
+  const roomFeatures = parseRoomFeatures(roomName);
 
-  function prevImage() {
-    setImgIdx((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  }
+  // --- Desktop table rows mode ---
+  if (asTableRows) {
+    const totalRows = visibleRates.length + (hasMore ? 1 : 0);
 
-  function nextImage() {
-    setImgIdx((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  }
-
-  return (
-    <div className="bg-white rounded-xl border border-border overflow-hidden transition-shadow duration-200 hover:shadow-md">
-      {/* Header: image + room info side by side */}
-      <div className="flex flex-col sm:flex-row">
-        {/* Image — fixed aspect ratio, not stretching */}
-        <div className="sm:w-56 md:w-64 shrink-0 relative">
-          <div className="aspect-[4/3] relative overflow-hidden bg-bg-cream">
-            {images.length > 0 ? (
-              <img
-                src={images[imgIdx]}
-                alt={roomName}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-text-muted text-sm">
-                <Bed size={24} className="text-text-muted/40" />
-              </div>
-            )}
-
-            {hasMultipleImages && (
-              <>
-                <button
-                  onClick={prevImage}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-white transition cursor-pointer"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                <button
-                  onClick={nextImage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-white transition cursor-pointer"
-                >
-                  <ChevronRight size={14} />
-                </button>
-                <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[11px] px-1.5 py-0.5 rounded">
-                  {imgIdx + 1}/{images.length}
-                </div>
-              </>
-            )}
-
-            {bestDiscount > 0 && (
-              <div className="absolute top-2 left-2 text-xs font-bold text-white bg-success px-2 py-0.5 rounded">
-                {bestDiscount}% OFF
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Room info header */}
-        <div className="flex-1 p-4 sm:p-5 flex flex-col justify-center">
-          <h3
-            className="text-base font-bold text-text-primary mb-1"
-            style={{ fontFamily: "var(--font-playfair)" }}
-          >
-            {roomName}
-          </h3>
-          <div className="flex items-center flex-wrap gap-3 text-xs text-text-muted">
-            {maxOccupancy && (
-              <span className="flex items-center gap-1">
-                <Users size={13} />
-                {t("maxGuests", { count: maxOccupancy })}
-              </span>
-            )}
-          </div>
-
-          {/* Quick price preview */}
-          <div className="mt-3 flex items-end gap-2">
-            <span className="text-xs text-text-muted">{t("from")}</span>
-            <span className="text-xl font-bold text-text-primary leading-none">
-              {formatCurrency(bestRate.retailRate, bestRate.currency)}
-            </span>
-            <span className="text-xs text-text-muted">{t("perNight")}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Rate options — clean table-style rows below the header */}
-      <div className="border-t border-border">
-        <div className="grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 gap-y-0 text-xs text-text-muted px-4 sm:px-5 py-2 bg-bg-cream/60 font-medium uppercase tracking-wide">
-          <span>Option</span>
-          <span className="hidden sm:block">Policy</span>
-          <span className="text-right">Price</span>
-          <span></span>
-        </div>
-
+    return (
+      <>
         {visibleRates.map((rate, idx) => {
-          const isRefundable =
-            rate.cancellationPolicy?.refundableTag !== "NON_REFUNDABLE" &&
-            rate.cancellationPolicy?.refundableTag !== undefined;
-          const discount =
-            rate.originalRate && rate.originalRate > rate.retailRate
-              ? Math.round((1 - rate.retailRate / rate.originalRate) * 100)
-              : 0;
+          const isRefundable = rate.cancellationPolicy?.refundableTag !== "NON_REFUNDABLE" && rate.cancellationPolicy?.refundableTag !== undefined;
+          const discount = rate.originalRate && rate.originalRate > rate.retailRate ? Math.round((1 - rate.retailRate / rate.originalRate) * 100) : 0;
+          const isFirst = idx === 0;
 
           return (
-            <div
+            <tr
               key={rate.offerId || idx}
-              className={`grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 px-4 sm:px-5 py-3 ${
-                idx < visibleRates.length - 1 ? "border-b border-border/50" : ""
-              } hover:bg-bg-cream/30 transition-colors`}
+              className={`hover:bg-accent/3 transition-all duration-200 cursor-pointer ${idx < visibleRates.length - 1 ? "border-b border-border/30" : ""}`}
+              onClick={() => onSelectRoom(rate.offerId)}
             >
-              {/* Board type */}
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-text-primary">{rate.boardName}</p>
-                {/* Show cancellation on mobile (hidden on sm+) */}
-                <div className="sm:hidden mt-0.5">
-                  {isRefundable ? (
-                    <span className="flex items-center gap-1 text-xs text-success font-medium">
-                      <Check size={11} />
-                      {t("freeCancellation")}
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-xs text-text-muted">
-                      <X size={11} />
-                      {t("nonRefundable")}
+              {/* Room Type cell — spans all rows */}
+              {isFirst && (
+                <td className="pl-8 pr-5 py-9 align-top" rowSpan={totalRows}>
+                  <h3 className="text-lg font-bold text-text-primary leading-snug mb-2" style={{ fontFamily: "var(--font-playfair)" }}>
+                    {roomName}
+                  </h3>
+                  {roomFeatures.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {roomFeatures.map((feat) => {
+                        const FeatIcon = feat.icon;
+                        return (
+                          <span
+                            key={feat.label}
+                            className="inline-flex items-center gap-2 text-sm text-text-secondary bg-bg-cream/80 px-3 py-1.5 rounded-lg"
+                          >
+                            <FeatIcon size={15} className="text-accent shrink-0" />
+                            {feat.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div className="mt-2 pt-3 border-t border-border/30">
+                    <span className="text-xs text-text-muted">{t("from")}</span>
+                    <p className="text-xl font-bold text-text-primary leading-tight mt-0.5">
+                      {formatCurrency(bestRate.retailRate, bestRate.currency)}
+                    </p>
+                    <span className="text-xs text-text-muted">{t("perNight")}</span>
+                  </div>
+                </td>
+              )}
+
+              {/* Max Guests cell — spans all rows */}
+              {isFirst && (
+                <td className="px-4 py-9 text-center align-middle" rowSpan={totalRows}>
+                  {maxOccupancy && (
+                    <span className="inline-flex items-center gap-1.5 text-sm text-text-secondary">
+                      <Users size={15} className="text-accent shrink-0" />
+                      {maxOccupancy} {maxOccupancy === 1 ? "guest" : "guests"}
                     </span>
                   )}
-                </div>
-              </div>
+                </td>
+              )}
 
-              {/* Cancellation policy — desktop */}
-              <div className="hidden sm:block shrink-0">
+              {/* Options: board type + cancellation */}
+              <td className="px-4 py-9 text-center align-middle">
+                <p className="text-sm font-medium text-text-primary">{rate.boardName}</p>
                 {isRefundable ? (
-                  <span className="flex items-center gap-1 text-xs text-success font-medium">
+                  <span className="inline-flex items-center gap-1 text-xs text-success font-medium mt-1">
                     <Check size={12} />
                     {t("freeCancellation")}
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 text-xs text-text-muted">
+                  <span className="inline-flex items-center gap-1 text-xs text-text-muted mt-1">
                     <X size={12} />
                     {t("nonRefundable")}
                   </span>
                 )}
-              </div>
+              </td>
 
-              {/* Price */}
-              <div className="text-right shrink-0">
+              {/* Price + CTA */}
+              <td className="px-4 py-9 text-center align-middle">
                 {discount > 0 && (
-                  <span className="text-[11px] text-text-muted line-through mr-1">
+                  <p className="text-[11px] text-text-muted line-through">
                     {formatCurrency(rate.originalRate!, rate.currency)}
-                  </span>
+                  </p>
                 )}
-                <p className="text-base font-bold text-text-primary">
+                <p className="text-lg font-bold text-text-primary">
                   {formatCurrency(rate.retailRate, rate.currency)}
                 </p>
-                <p className="text-[10px] text-text-muted">{t("includesTaxes")}</p>
-              </div>
-
-              {/* CTA */}
-              <button
-                onClick={() => onSelectRoom(rate.offerId)}
-                className="bg-accent hover:bg-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer whitespace-nowrap active:scale-95"
-              >
-                {t("chooseRoom")}
-              </button>
-            </div>
+                <p className="text-[10px] text-text-muted mb-3">{t("includesTaxes")}</p>
+                <button
+                  onClick={() => onSelectRoom(rate.offerId)}
+                  className="bg-accent hover:bg-accent-hover hover:shadow-lg hover:shadow-accent/25 hover:scale-105 text-white text-sm font-bold px-6 py-3 rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap active:scale-95"
+                >
+                  {t("chooseRoom")}
+                </button>
+              </td>
+            </tr>
           );
         })}
 
-        {/* Show more / less toggle */}
+        {/* Show more / less row */}
         {hasMore && (
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="w-full py-2.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors cursor-pointer border-t border-border/50"
-          >
-            {expanded
-              ? t("showLess")
-              : `+${uniqueRates.length - 3} more options`}
+          <tr>
+            <td colSpan={3} className="text-center py-2">
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="text-xs font-medium text-accent hover:text-accent-hover cursor-pointer"
+              >
+                {expanded ? t("showLess") : `+${uniqueRates.length - 3} more options`}
+              </button>
+            </td>
+          </tr>
+        )}
+      </>
+    );
+  }
+
+  // --- Mobile card mode (no image) ---
+  return (
+    <div className="bg-white rounded-xl border border-border overflow-hidden">
+      <div className="p-4">
+        <h3 className="text-base font-bold text-text-primary mb-1" style={{ fontFamily: "var(--font-playfair)" }}>{roomName}</h3>
+        {roomFeatures.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {roomFeatures.map((feat) => {
+              const FeatIcon = feat.icon;
+              return (
+                <span
+                  key={feat.label}
+                  className="inline-flex items-center gap-1.5 text-[13px] text-text-secondary bg-bg-cream/80 px-2.5 py-1 rounded-lg"
+                >
+                  <FeatIcon size={14} className="text-accent shrink-0" />
+                  {feat.label}
+                </span>
+              );
+            })}
+          </div>
+        )}
+        {maxOccupancy && <span className="flex items-center gap-1 text-xs text-text-muted mb-2"><Users size={12} />{t("maxGuests", { count: maxOccupancy })}</span>}
+        <div className="flex items-end gap-1 mb-3">
+          <span className="text-[11px] text-text-muted">{t("from")}</span>
+          <span className="text-lg font-bold text-text-primary leading-none">{formatCurrency(bestRate.retailRate, bestRate.currency)}</span>
+          <span className="text-[11px] text-text-muted">{t("perNight")}</span>
+        </div>
+        <div className="space-y-0">
+          {visibleRates.map((rate, idx) => {
+            const isRefundable = rate.cancellationPolicy?.refundableTag !== "NON_REFUNDABLE" && rate.cancellationPolicy?.refundableTag !== undefined;
+            const discount = rate.originalRate && rate.originalRate > rate.retailRate ? Math.round((1 - rate.retailRate / rate.originalRate) * 100) : 0;
+            return (
+              <div key={rate.offerId || idx} className="flex items-center justify-between gap-3 py-3 border-t border-border/40 cursor-pointer hover:bg-accent/3 transition-all duration-200 -mx-4 px-4 rounded-lg">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-text-primary">{rate.boardName}</p>
+                  {isRefundable ? (
+                    <span className="flex items-center gap-1 text-[11px] text-success font-medium mt-0.5"><Check size={11} />{t("freeCancellation")}</span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-[11px] text-text-muted mt-0.5"><X size={11} />{t("nonRefundable")}</span>
+                  )}
+                </div>
+                <div className="text-right shrink-0">
+                  {discount > 0 && <p className="text-[11px] text-text-muted line-through">{formatCurrency(rate.originalRate!, rate.currency)}</p>}
+                  <p className="text-base font-bold text-text-primary">{formatCurrency(rate.retailRate, rate.currency)}</p>
+                  <p className="text-[10px] text-text-muted">{t("includesTaxes")}</p>
+                </div>
+                <button onClick={() => onSelectRoom(rate.offerId)} className="bg-accent hover:bg-accent-hover hover:shadow-lg hover:shadow-accent/25 hover:scale-105 text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap active:scale-95 shrink-0">{t("chooseRoom")}</button>
+              </div>
+            );
+          })}
+        </div>
+        {hasMore && (
+          <button onClick={() => setExpanded(!expanded)} className="w-full py-2 mt-1 text-xs font-medium text-accent hover:text-accent-hover cursor-pointer">
+            {expanded ? t("showLess") : `+${uniqueRates.length - 3} more options`}
           </button>
         )}
       </div>
@@ -247,7 +299,6 @@ function deduplicateRates(rates: RoomData[]): RoomData[] {
     }
   }
 
-  // Sort by price ascending
   result.sort((a, b) => a.retailRate - b.retailRate);
   return result;
 }

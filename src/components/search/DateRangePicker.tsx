@@ -82,49 +82,58 @@ export default function DateRangePicker() {
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 top-full mt-1 bg-white rounded-xl shadow-xl border border-border p-5 w-[320px] sm:w-[620px] left-1/2 -translate-x-1/2">
-          {/* Header with month navigation */}
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={prevMonth}
-              className="w-8 h-8 rounded-full hover:bg-bg-cream flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <ChevronLeft size={18} className="text-text-secondary" />
-            </button>
-            <div className="flex gap-12 sm:gap-24">
-              <h3 className="text-sm font-bold text-text-primary">
-                {format(month1, "MMMM yyyy")}
-              </h3>
-              <h3 className="hidden sm:block text-sm font-bold text-text-primary">
-                {format(month2, "MMMM yyyy")}
-              </h3>
+        <>
+          {/* Mobile: full-screen overlay */}
+          <div className="sm:hidden fixed inset-0 bg-black/40 z-40" onClick={() => setIsOpen(false)} />
+          <div className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-2xl p-5 pb-8 sm:absolute sm:inset-auto sm:top-full sm:mt-1 sm:rounded-xl sm:shadow-xl sm:border sm:border-border sm:p-5 sm:w-[620px] sm:left-1/2 sm:-translate-x-1/2 sm:pb-5">
+            {/* Mobile drag handle */}
+            <div className="sm:hidden flex justify-center mb-4">
+              <div className="w-10 h-1 rounded-full bg-border" />
             </div>
-            <button
-              onClick={nextMonth}
-              className="w-8 h-8 rounded-full hover:bg-bg-cream flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <ChevronRight size={18} className="text-text-secondary" />
-            </button>
-          </div>
 
-          <div className="flex gap-6">
-            <MonthGrid
-              month={month1}
-              checkInDate={checkInDate}
-              checkOutDate={checkOutDate}
-              today={today}
-              onDayClick={handleDayClick}
-            />
-            <MonthGrid
-              month={month2}
-              checkInDate={checkInDate}
-              checkOutDate={checkOutDate}
-              today={today}
-              onDayClick={handleDayClick}
-              className="hidden sm:block"
-            />
+            {/* Header with month navigation */}
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={prevMonth}
+                className="w-8 h-8 rounded-full hover:bg-bg-cream flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <ChevronLeft size={18} className="text-text-secondary" />
+              </button>
+              <div className="flex gap-12 sm:gap-24">
+                <h3 className="text-sm font-bold text-text-primary">
+                  {format(month1, "MMMM yyyy")}
+                </h3>
+                <h3 className="hidden sm:block text-sm font-bold text-text-primary">
+                  {format(month2, "MMMM yyyy")}
+                </h3>
+              </div>
+              <button
+                onClick={nextMonth}
+                className="w-8 h-8 rounded-full hover:bg-bg-cream flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <ChevronRight size={18} className="text-text-secondary" />
+              </button>
+            </div>
+
+            <div className="flex gap-6">
+              <MonthGrid
+                month={month1}
+                checkInDate={checkInDate}
+                checkOutDate={checkOutDate}
+                today={today}
+                onDayClick={handleDayClick}
+              />
+              <MonthGrid
+                month={month2}
+                checkInDate={checkInDate}
+                checkOutDate={checkOutDate}
+                today={today}
+                onDayClick={handleDayClick}
+                className="hidden sm:block"
+              />
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

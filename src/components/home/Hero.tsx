@@ -143,7 +143,7 @@ export default function Hero() {
   const marqueeText = phrases.join("  \u2022  "); // bullet separator
 
   return (
-    <section className="relative bg-white pt-20 sm:pt-24 pb-32 sm:pb-36">
+    <section className="relative bg-white pt-20 sm:pt-24 pb-40 sm:pb-36">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Scrolling text marquee bar — aligned with hero width */}
         <div className="overflow-hidden py-2.5 mb-4 sm:mb-5">
@@ -162,7 +162,7 @@ export default function Hero() {
           ref={contRef}
           role="region"
           aria-label="Featured destinations carousel"
-          className="relative rounded-3xl overflow-hidden h-[520px] sm:h-[600px] select-none"
+          className="relative rounded-3xl overflow-hidden h-[400px] sm:h-[600px] select-none"
           style={{ cursor: dragging ? "grabbing" : "grab" }}
           onMouseDown={onDown}
           onMouseMove={onMove}

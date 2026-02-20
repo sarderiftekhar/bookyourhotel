@@ -4,7 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import { Users, Minus, Plus, ChevronDown } from "lucide-react";
 import { useSearchStore } from "@/store/searchStore";
 
-export default function GuestSelector() {
+interface GuestSelectorProps {
+  compact?: boolean;
+}
+
+export default function GuestSelector({ compact = false }: GuestSelectorProps) {
   const { adults, children, rooms, setGuests, setRooms } = useSearchStore();
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -20,6 +24,7 @@ export default function GuestSelector() {
   }, []);
 
   const summary = `${adults} adult${adults !== 1 ? "s" : ""} \u00B7 ${children} child${children !== 1 ? "ren" : ""} \u00B7 ${rooms} room${rooms !== 1 ? "s" : ""}`;
+  const compactSummary = `${adults + children} guest${adults + children !== 1 ? "s" : ""} \u00B7 ${rooms} rm`;
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -28,43 +33,52 @@ export default function GuestSelector() {
         className="w-full flex items-center gap-2 px-3 py-3 text-sm bg-transparent text-text-primary text-left cursor-pointer"
       >
         <Users size={18} className="text-text-muted shrink-0" />
-        <span className="truncate flex-1">{summary}</span>
+        <span className="truncate flex-1">{compact ? compactSummary : summary}</span>
         <ChevronDown size={14} className={`text-text-muted transition-transform duration-200 shrink-0 ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 top-full mt-1 bg-white rounded-xl shadow-xl border border-border p-5 w-72 right-0">
-          <div className="space-y-5">
-            <CounterRow
-              label="Adults"
-              value={adults}
-              min={1}
-              max={9}
-              onChange={(v) => setGuests(v, children, [])}
-            />
-            <CounterRow
-              label="Children"
-              value={children}
-              min={0}
-              max={6}
-              onChange={(v) => setGuests(adults, v, [])}
-            />
-            <CounterRow
-              label="Rooms"
-              value={rooms}
-              min={1}
-              max={9}
-              onChange={(v) => setRooms(v)}
-            />
-          </div>
+        <>
+          {/* Mobile: full-screen overlay */}
+          <div className="sm:hidden fixed inset-0 bg-black/40 z-40" onClick={() => setIsOpen(false)} />
+          <div className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-2xl p-5 pb-8 sm:absolute sm:inset-auto sm:top-full sm:mt-1 sm:rounded-xl sm:shadow-xl sm:border sm:border-border sm:p-5 sm:w-72 sm:right-0 sm:pb-5">
+            {/* Mobile drag handle */}
+            <div className="sm:hidden flex justify-center mb-4">
+              <div className="w-10 h-1 rounded-full bg-border" />
+            </div>
 
-          <button
-            onClick={() => setIsOpen(false)}
-            className="w-full mt-5 py-2.5 text-sm font-semibold text-accent border border-accent rounded-lg hover:bg-accent hover:text-white transition-colors cursor-pointer"
-          >
-            Done
-          </button>
-        </div>
+            <div className="space-y-5">
+              <CounterRow
+                label="Adults"
+                value={adults}
+                min={1}
+                max={9}
+                onChange={(v) => setGuests(v, children, [])}
+              />
+              <CounterRow
+                label="Children"
+                value={children}
+                min={0}
+                max={6}
+                onChange={(v) => setGuests(adults, v, [])}
+              />
+              <CounterRow
+                label="Rooms"
+                value={rooms}
+                min={1}
+                max={9}
+                onChange={(v) => setRooms(v)}
+              />
+            </div>
+
+            <button
+              onClick={() => setIsOpen(false)}
+              className="w-full mt-5 py-2.5 text-sm font-semibold text-accent border border-accent rounded-lg hover:bg-accent hover:text-white transition-colors cursor-pointer"
+            >
+              Done
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

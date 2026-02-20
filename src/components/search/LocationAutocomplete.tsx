@@ -152,7 +152,7 @@ export default function LocationAutocomplete() {
 
       {/* Trending destinations */}
       {showTrending && (
-        <div className="absolute z-50 top-full mt-1 w-full bg-white rounded-xl shadow-xl border border-border max-h-72 overflow-y-auto">
+        <div className="absolute z-50 top-full mt-1 left-0 right-0 sm:w-full bg-white rounded-xl shadow-xl border border-border max-h-72 overflow-y-auto">
           <p className="px-4 pt-3 pb-1.5 text-xs font-bold text-text-primary">
             Trending destinations
           </p>
@@ -174,7 +174,7 @@ export default function LocationAutocomplete() {
 
       {/* Search results */}
       {showResults && (
-        <div className="absolute z-50 top-full mt-1 w-full bg-white rounded-xl shadow-xl border border-border max-h-72 overflow-y-auto">
+        <div className="absolute z-50 top-full mt-1 left-0 right-0 sm:w-full bg-white rounded-xl shadow-xl border border-border max-h-72 overflow-y-auto">
           {results.map((place) => (
             <button
               key={place.placeId}
@@ -194,7 +194,7 @@ export default function LocationAutocomplete() {
       )}
 
       {loading && userTypedRef.current && (
-        <div className="absolute z-50 top-full mt-1 w-full bg-white rounded-xl shadow-xl border border-border p-4 text-center text-sm text-text-muted">
+        <div className="absolute z-50 top-full mt-1 left-0 right-0 sm:w-full bg-white rounded-xl shadow-xl border border-border p-4 text-center text-sm text-text-muted">
           Searching...
         </div>
       )}

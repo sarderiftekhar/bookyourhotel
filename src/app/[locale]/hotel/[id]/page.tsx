@@ -597,7 +597,7 @@ function HotelDetailPageInner() {
             <div>
               <div className="flex items-center justify-between mb-5">
                 <h2
-                  className="text-xl font-bold text-text-primary"
+                  className="text-xl font-bold text-accent"
                   style={{ fontFamily: "var(--font-playfair)" }}
                 >
                   {t("popularFacilities")}
