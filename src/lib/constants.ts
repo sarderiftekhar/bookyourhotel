@@ -39,13 +39,21 @@ export const DEFAULT_CURRENCY = "USD";
 
 export const LITEAPI_BASE_URL = "https://api.liteapi.travel/v3.0";
 
-/** Map country code (from navigator.language region) → currency code */
+/** Map country code (from navigator.language region or IP geo) → currency code */
 export const COUNTRY_TO_CURRENCY: Record<string, string> = {
   // Americas
-  US: "USD", CA: "CAD", MX: "MXN", BR: "BRL", NZ: "USD",
-  // Europe
-  GB: "GBP", FR: "EUR", DE: "EUR", ES: "EUR", IT: "EUR", NL: "EUR",
+  US: "USD", CA: "CAD", MX: "MXN", BR: "BRL",
+  // UK
+  GB: "GBP",
+  // Eurozone (all 20 member states)
+  FR: "EUR", DE: "EUR", ES: "EUR", IT: "EUR", NL: "EUR",
   BE: "EUR", AT: "EUR", PT: "EUR", IE: "EUR", FI: "EUR", GR: "EUR",
+  LU: "EUR", SK: "EUR", SI: "EUR", LT: "EUR", LV: "EUR", EE: "EUR",
+  MT: "EUR", CY: "EUR", HR: "EUR",
+  // Non-eurozone Europe (map to EUR for convenience)
+  SE: "EUR", DK: "EUR", PL: "EUR", CZ: "EUR", HU: "EUR",
+  RO: "EUR", BG: "EUR", NO: "EUR", IS: "EUR",
+  // Switzerland
   CH: "CHF",
   // Middle East
   AE: "AED", SA: "SAR", QA: "SAR", KW: "SAR", BH: "SAR", OM: "SAR",
@@ -53,7 +61,7 @@ export const COUNTRY_TO_CURRENCY: Record<string, string> = {
   JP: "JPY", CN: "CNY", IN: "INR", KR: "KRW", SG: "SGD",
   TH: "THB", MY: "MYR", ID: "IDR", PH: "PHP",
   // Oceania
-  AU: "AUD",
+  AU: "AUD", NZ: "AUD",
   // Other
   TR: "TRY",
 };
