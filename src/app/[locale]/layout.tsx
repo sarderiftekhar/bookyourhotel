@@ -6,6 +6,9 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ChatBot from "@/components/chat/ChatBot";
 import AutoDetectPreferences from "@/components/AutoDetectPreferences";
+import LegalModals from "@/components/legal/LegalModals";
+import CookieConsent from "@/components/layout/CookieConsent";
+import ScrollToTop from "@/components/layout/ScrollToTop";
 
 export default async function LocaleLayout({
   children,
@@ -31,6 +34,9 @@ export default async function LocaleLayout({
           <main className="min-h-screen">{children}</main>
           <Footer />
           <ChatBot />
+          <ScrollToTop />
+          <LegalModals />
+          <CookieConsent />
           <AutoDetectPreferences />
         </Providers>
       </NextIntlClientProvider>

@@ -235,7 +235,8 @@
     "privacyPolicy": "سياسة الخصوصية",
     "termsOfService": "شروط الخدمة",
     "helpCenter": "مركز المساعدة",
+    "cookiePolicy": "سياسة ملفات تعريف الارتباط",
     "faq": "الأسئلة الشائعة",
-    "copyright": "© {year} BookYourHotel. جميع الحقوق محفوظة."
+    "copyright": "© {year} BookYourHotel. جميع الحقوق محفوظة. مشغل بواسطة <company>Unique Evolution Limited</company>."
   }
 }

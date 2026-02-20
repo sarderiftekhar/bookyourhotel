@@ -235,7 +235,8 @@
     "privacyPolicy": "Política de Privacidad",
     "termsOfService": "Términos de Servicio",
     "helpCenter": "Centro de Ayuda",
+    "cookiePolicy": "Política de Cookies",
     "faq": "Preguntas Frecuentes",
-    "copyright": "© {year} BookYourHotel. Todos los derechos reservados."
+    "copyright": "© {year} BookYourHotel. Todos los derechos reservados. Operado por <company>Unique Evolution Limited</company>."
   }
 }

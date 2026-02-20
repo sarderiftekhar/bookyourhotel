@@ -34,7 +34,7 @@ export default function Newsletter() {
   }
 
   return (
-    <section className="py-20 sm:py-28 bg-white">
+    <section className="pt-20 sm:pt-28 pb-8 sm:pb-12 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* CTA Section */}
         <div ref={ref} className={`text-center mb-16 ${isVisible ? "animate-fade-up" : "scroll-hidden"}`}>
@@ -86,29 +86,38 @@ export default function Newsletter() {
           )}
         </div>
 
-        {/* Hotel Chain Logos Marquee */}
-        <div className="relative overflow-hidden py-8 border-t border-border/50">
-          {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-20 bg-linear-to-r from-white to-transparent z-10" />
-          <div className="absolute right-0 top-0 bottom-0 w-20 bg-linear-to-l from-white to-transparent z-10" />
+        {/* Hotel Chain Logos Section */}
+        <div className="mt-28">
+          {/* Title above divider */}
+          <p className="text-center text-sm text-text-muted font-medium tracking-wide mb-4">
+            1000s of brand hotels to choose from
+          </p>
+          <div className="border-t border-border/50" />
 
-          <div className="flex animate-marquee">
-            {["a", "b"].map((copy) =>
-              HOTEL_CHAINS.map((chain) => (
-                <div
-                  key={`${copy}-${chain.name}`}
-                  className="flex-none px-8 sm:px-12 flex items-center justify-center"
-                >
-                  <Image
-                    src={chain.logo}
-                    alt={chain.name}
-                    width={140}
-                    height={40}
-                    className="h-8 sm:h-10 w-auto opacity-30 grayscale hover:opacity-60 hover:grayscale-0 transition-all duration-300"
-                  />
-                </div>
-              ))
-            )}
+          {/* Logos marquee */}
+          <div className="relative overflow-hidden pt-10 pb-8">
+            {/* Fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-20 bg-linear-to-r from-white to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-20 bg-linear-to-l from-white to-transparent z-10" />
+
+            <div className="flex animate-marquee items-center">
+              {["a", "b"].map((copy) =>
+                HOTEL_CHAINS.map((chain) => (
+                  <div
+                    key={`${copy}-${chain.name}`}
+                    className="flex-none px-8 sm:px-12 flex items-center justify-center"
+                  >
+                    <Image
+                      src={chain.logo}
+                      alt={chain.name}
+                      width={140}
+                      height={40}
+                      className="h-8 sm:h-10 w-auto opacity-30 grayscale hover:opacity-60 hover:grayscale-0 transition-all duration-300"
+                    />
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

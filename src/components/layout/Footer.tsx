@@ -2,13 +2,15 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { MapPin, Phone, Mail, ArrowRight } from "lucide-react";
+import { MapPin, Mail } from "lucide-react";
 import Image from "next/image";
+import { useLegalModalStore } from "@/store/legalModalStore";
 
 export default function Footer() {
   const t = useTranslations("footer");
   const tn = useTranslations("nav");
   const currentYear = new Date().getFullYear();
+  const openModal = useLegalModalStore((s) => s.openModal);
 
   return (
     <footer className="bg-bg-dark text-text-light relative overflow-hidden">
@@ -24,21 +26,14 @@ export default function Footer() {
               <Image
                 src="/images/Logo-Book-Your-hotel.png"
                 alt="BookYourHotel"
-                width={220}
-                height={60}
-                className="h-20 w-auto"
+                width={320}
+                height={90}
+                className="w-full max-w-xs h-auto"
               />
             </div>
-            <p className="text-sm text-gray-400 leading-relaxed mb-6 max-w-xs">
+            <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
               {t("aboutText")}
             </p>
-            <Link
-              href="/about"
-              className="inline-flex items-center gap-2 text-accent-bright text-sm font-medium hover:gap-3 transition-all duration-300 group"
-            >
-              Learn more about us
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
           </div>
 
           {/* Quick Links */}
@@ -71,17 +66,18 @@ export default function Footer() {
             </h4>
             <ul className="space-y-3">
               {[
-                { href: "/privacy" as const, label: t("privacyPolicy") },
-                { href: "/terms" as const, label: t("termsOfService") },
-                { href: "/contact" as const, label: t("helpCenter") },
+                { key: "privacy" as const, label: t("privacyPolicy") },
+                { key: "terms" as const, label: t("termsOfService") },
+                { key: "cookies" as const, label: t("cookiePolicy") },
+                { key: "help" as const, label: t("helpCenter") },
               ].map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={item.href}
+                <li key={item.key}>
+                  <button
+                    onClick={() => openModal(item.key)}
                     className="text-sm text-gray-400 hover:text-accent-bright transition-colors duration-200"
                   >
                     {item.label}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -94,26 +90,18 @@ export default function Footer() {
             </h4>
             <ul className="space-y-4">
               <li>
-                <a href="mailto:support@bookyourhotel.online" className="flex items-center gap-3 text-sm text-gray-400 hover:text-accent-bright transition-colors group">
+                <a href="mailto:sales@uniqevo.co.uk" className="flex items-center gap-3 text-sm text-gray-400 hover:text-accent-bright transition-colors group">
                   <div className="w-9 h-9 rounded-lg bg-white/5 group-hover:bg-accent-bright/10 flex items-center justify-center transition-colors">
                     <Mail size={15} className="text-accent-bright" />
                   </div>
-                  support@bookyourhotel.online
-                </a>
-              </li>
-              <li>
-                <a href="tel:+18001234567" className="flex items-center gap-3 text-sm text-gray-400 hover:text-accent-bright transition-colors group">
-                  <div className="w-9 h-9 rounded-lg bg-white/5 group-hover:bg-accent-bright/10 flex items-center justify-center transition-colors">
-                    <Phone size={15} className="text-accent-bright" />
-                  </div>
-                  +1 (800) 123-4567
+                  sales@uniqevo.co.uk
                 </a>
               </li>
               <li className="flex items-center gap-3 text-sm text-gray-400">
                 <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center">
                   <MapPin size={15} className="text-accent-bright" />
                 </div>
-                123 Travel Street, Suite 100
+                Willett House, Queens Road West, London, UK
               </li>
             </ul>
           </div>
@@ -124,7 +112,19 @@ export default function Footer() {
       <div className="border-t border-white/6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500">
-            {t("copyright", { year: currentYear })}
+            {t.rich("copyright", {
+              year: currentYear,
+              company: (chunks) => (
+                <a
+                  href="https://www.uniqevo.co.uk"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent-bright hover:underline"
+                >
+                  {chunks}
+                </a>
+              ),
+            })}
           </p>
           <div className="flex items-center gap-3">
             {[
