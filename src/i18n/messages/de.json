@@ -179,6 +179,8 @@
     "total": "Gesamt",
     "cancellationPolicy": "Stornierungsbedingungen",
     "bookNow": "Buchung Abschließen",
+    "proceedToPayment": "Zur Zahlung",
+    "confirmAndPay": "Bestätigen & Bezahlen",
     "processing": "Verarbeitung...",
     "confirmationTitle": "Buchung Bestätigt!",
     "confirmationSubtitle": "Ihre Reservierung wurde erfolgreich abgeschlossen",

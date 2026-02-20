@@ -143,21 +143,8 @@ export default function Hero() {
   const marqueeText = phrases.join("  \u2022  "); // bullet separator
 
   return (
-    <section className="relative bg-white pt-20 sm:pt-24 pb-40 sm:pb-36">
+    <section className="relative bg-white pt-32 sm:pt-36 pb-40 sm:pb-36">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Scrolling text marquee bar — aligned with hero width */}
-        <div className="overflow-hidden py-2.5 mb-4 sm:mb-5">
-          <div className="animate-marquee-slow flex whitespace-nowrap">
-            {["marquee-a", "marquee-b"].map((id) => (
-              <span
-                key={id}
-                className="text-accent text-xs font-medium tracking-wider uppercase shrink-0"
-              >
-                {marqueeText}&nbsp;&nbsp;&bull;&nbsp;&nbsp;
-              </span>
-            ))}
-          </div>
-        </div>
         <div
           ref={contRef}
           role="region"
@@ -330,6 +317,22 @@ export default function Hero() {
         <div className="hidden sm:flex items-center gap-1.5">
           <svg className="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
           Free cancellation
+        </div>
+      </div>
+
+      {/* Scrolling text marquee bar — bottom of hero */}
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mt-10 sm:mt-12">
+        <div className="overflow-hidden py-2.5">
+          <div className="animate-marquee-slow flex whitespace-nowrap">
+            {["marquee-a", "marquee-b"].map((id) => (
+              <span
+                key={id}
+                className="text-text-muted/40 text-xs font-medium tracking-wider uppercase shrink-0"
+              >
+                {marqueeText}&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </section>

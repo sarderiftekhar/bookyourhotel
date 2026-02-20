@@ -9,7 +9,12 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/authStore";
 import { useFavoritesStore } from "@/store/favoritesStore";
 
-export default function UserMenu() {
+interface UserMenuProps {
+  variant?: "standalone" | "dropdown";
+  onItemClick?: () => void;
+}
+
+export default function UserMenu({ variant = "standalone", onItemClick }: UserMenuProps) {
   const t = useTranslations("auth");
   const router = useRouter();
   const { user, profile, loading } = useAuthStore();
@@ -23,9 +28,11 @@ export default function UserMenu() {
         setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
+    if (variant === "standalone") {
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }
+  }, [variant]);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -33,6 +40,7 @@ export default function UserMenu() {
     useAuthStore.getState().reset();
     resetFavorites();
     setOpen(false);
+    onItemClick?.();
     router.push("/");
   }
 
@@ -43,6 +51,9 @@ export default function UserMenu() {
   }
 
   if (!user) {
+    // In dropdown variant, the parent handles the sign-in link
+    if (variant === "dropdown") return null;
+
     return (
       <Link
         href="/login"
@@ -60,6 +71,54 @@ export default function UserMenu() {
     .toUpperCase()
     .slice(0, 2);
 
+  // Dropdown variant: render inline menu items (no popover)
+  if (variant === "dropdown") {
+    return (
+      <>
+        {/* User info */}
+        <div className="px-4 py-2 mb-1">
+          <p className="text-sm font-semibold text-white truncate">
+            {profile?.full_name || t("user")}
+          </p>
+          <p className="text-xs text-white/50 truncate">{user.email}</p>
+        </div>
+
+        <Link
+          href="/account"
+          onClick={onItemClick}
+          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/15 rounded-full transition-colors"
+        >
+          <User size={16} />
+          {t("myAccount")}
+        </Link>
+        <Link
+          href="/account/bookings"
+          onClick={onItemClick}
+          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/15 rounded-full transition-colors"
+        >
+          <BookOpen size={16} />
+          {t("myBookings")}
+        </Link>
+        <Link
+          href="/account/favorites"
+          onClick={onItemClick}
+          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/15 rounded-full transition-colors"
+        >
+          <Heart size={16} />
+          {t("myFavorites")}
+        </Link>
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-white/10 rounded-full transition-colors w-full cursor-pointer"
+        >
+          <LogOut size={16} />
+          {t("signOut")}
+        </button>
+      </>
+    );
+  }
+
+  // Standalone variant: original popover behavior
   return (
     <div ref={menuRef} className="relative">
       <button

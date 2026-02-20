@@ -4,10 +4,19 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowRight, CheckCircle } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import Image from "next/image";
 
-const PARTNER_LOGOS = [
-  "Booking.com", "Expedia", "Hotels.com", "Agoda", "Trip.com",
-  "Trivago", "Kayak", "Priceline", "HotelsCombined", "Skyscanner",
+const HOTEL_CHAINS = [
+  { name: "Marriott", logo: "/images/hotel-chains/marriott.svg" },
+  { name: "Hilton", logo: "/images/hotel-chains/hilton.svg" },
+  { name: "Hyatt", logo: "/images/hotel-chains/hyatt.svg" },
+  { name: "IHG", logo: "/images/hotel-chains/ihg.svg" },
+  { name: "Accor", logo: "/images/hotel-chains/accor.svg" },
+  { name: "Wyndham", logo: "/images/hotel-chains/wyndham.svg" },
+  { name: "Best Western", logo: "/images/hotel-chains/bestwestern.svg" },
+  { name: "Radisson", logo: "/images/hotel-chains/radisson.svg" },
+  { name: "Four Seasons", logo: "/images/hotel-chains/fourseasons.svg" },
+  { name: "Shangri-La", logo: "/images/hotel-chains/shangri-la.svg" },
 ];
 
 export default function Newsletter() {
@@ -77,7 +86,7 @@ export default function Newsletter() {
           )}
         </div>
 
-        {/* Partner Logos Marquee */}
+        {/* Hotel Chain Logos Marquee */}
         <div className="relative overflow-hidden py-8 border-t border-border/50">
           {/* Fade edges */}
           <div className="absolute left-0 top-0 bottom-0 w-20 bg-linear-to-r from-white to-transparent z-10" />
@@ -85,14 +94,18 @@ export default function Newsletter() {
 
           <div className="flex animate-marquee">
             {["a", "b"].map((copy) =>
-              PARTNER_LOGOS.map((logo) => (
+              HOTEL_CHAINS.map((chain) => (
                 <div
-                  key={`${copy}-${logo}`}
+                  key={`${copy}-${chain.name}`}
                   className="flex-none px-8 sm:px-12 flex items-center justify-center"
                 >
-                  <span className="text-text-muted/40 text-lg sm:text-xl font-bold tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-playfair)" }}>
-                    {logo}
-                  </span>
+                  <Image
+                    src={chain.logo}
+                    alt={chain.name}
+                    width={140}
+                    height={40}
+                    className="h-8 sm:h-10 w-auto opacity-30 grayscale hover:opacity-60 hover:grayscale-0 transition-all duration-300"
+                  />
                 </div>
               ))
             )}

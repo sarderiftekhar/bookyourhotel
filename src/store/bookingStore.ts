@@ -14,6 +14,7 @@ interface BookingState {
   totalRate: number;
   prebookId: string | null;
   clientSecret: string | null;
+  transactionId: string | null;
   cancellationPolicy: string;
   maxOccupancy: number;
   roomImage: string;
@@ -32,7 +33,7 @@ interface BookingState {
     maxOccupancy: number;
     roomImage: string;
   }) => void;
-  setPrebook: (prebookId: string, clientSecret?: string) => void;
+  setPrebook: (prebookId: string, clientSecret?: string, transactionId?: string) => void;
   reset: () => void;
 }
 
@@ -48,6 +49,7 @@ export const useBookingStore = create<BookingState>()((set) => ({
   totalRate: 0,
   prebookId: null,
   clientSecret: null,
+  transactionId: null,
   cancellationPolicy: "",
   maxOccupancy: 2,
   roomImage: "",
@@ -57,9 +59,10 @@ export const useBookingStore = create<BookingState>()((set) => ({
       ...room,
       prebookId: null,
       clientSecret: null,
+      transactionId: null,
     }),
-  setPrebook: (prebookId, clientSecret) =>
-    set({ prebookId, clientSecret }),
+  setPrebook: (prebookId, clientSecret, transactionId) =>
+    set({ prebookId, clientSecret, transactionId }),
   reset: () =>
     set({
       offerId: null,
@@ -73,6 +76,7 @@ export const useBookingStore = create<BookingState>()((set) => ({
       totalRate: 0,
       prebookId: null,
       clientSecret: null,
+      transactionId: null,
       cancellationPolicy: "",
       maxOccupancy: 2,
       roomImage: "",

@@ -179,6 +179,8 @@
     "total": "Total",
     "cancellationPolicy": "Política de Cancelación",
     "bookNow": "Completar Reserva",
+    "proceedToPayment": "Proceder al Pago",
+    "confirmAndPay": "Confirmar y Pagar",
     "processing": "Procesando...",
     "confirmationTitle": "¡Reserva Confirmada!",
     "confirmationSubtitle": "Tu reservación se ha completado exitosamente",

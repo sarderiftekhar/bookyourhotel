@@ -9,15 +9,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "prebookId is required" }, { status: 400 });
     }
 
+    if (!body.transactionId) {
+      return NextResponse.json({ error: "transactionId is required" }, { status: 400 });
+    }
+
     const result = await confirmBooking({
       prebookId: body.prebookId,
-      guestFirstName: body.firstName,
-      guestLastName: body.lastName,
-      guestEmail: body.email,
-      phoneNumber: body.phone,
-      remarks: body.specialRequests,
-      paymentMethod: body.paymentMethod || "CREDIT_CARD",
-      holderName: `${body.firstName} ${body.lastName}`,
+      holder: {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        email: body.email,
+      },
+      payment: {
+        method: "TRANSACTION_ID",
+        transactionId: body.transactionId,
+      },
+      guests: [
+        {
+          occupancyNumber: 1,
+          remarks: body.specialRequests || "",
+          firstName: body.firstName,
+          lastName: body.lastName,
+          email: body.email,
+        },
+      ],
     });
 
     return NextResponse.json(result);

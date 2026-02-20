@@ -179,6 +179,8 @@
     "total": "المجموع",
     "cancellationPolicy": "سياسة الإلغاء",
     "bookNow": "إتمام الحجز",
+    "proceedToPayment": "المتابعة للدفع",
+    "confirmAndPay": "تأكيد والدفع",
     "processing": "جاري المعالجة...",
     "confirmationTitle": "تم تأكيد الحجز!",
     "confirmationSubtitle": "تم إتمام حجزك بنجاح",

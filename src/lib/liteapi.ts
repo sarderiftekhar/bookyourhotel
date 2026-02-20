@@ -118,20 +118,22 @@ export async function getHotelReviews(hotelId: string, limit: number = 10, offse
 export async function prebookRate(offerId: string) {
   return apiRequest<{ data: Record<string, unknown> }>("/rates/prebook", {
     method: "POST",
-    body: { offerId, usePaymentSdk: false },
+    body: { offerId, usePaymentSdk: true },
   });
 }
 
 // Book - confirm reservation
 export async function confirmBooking(params: {
   prebookId: string;
-  guestFirstName: string;
-  guestLastName: string;
-  guestEmail: string;
-  phoneNumber?: string;
-  remarks?: string;
-  paymentMethod?: string;
-  holderName?: string;
+  holder: { firstName: string; lastName: string; email: string };
+  payment: { method: string; transactionId: string };
+  guests: Array<{
+    occupancyNumber: number;
+    remarks: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  }>;
 }) {
   return apiRequest<{ data: Record<string, unknown> }>("/rates/book", {
     method: "POST",
