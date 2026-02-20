@@ -9,6 +9,7 @@ import AutoDetectPreferences from "@/components/AutoDetectPreferences";
 import LegalModals from "@/components/legal/LegalModals";
 import CookieConsent from "@/components/layout/CookieConsent";
 import ScrollToTop from "@/components/layout/ScrollToTop";
+import SocialFloat from "@/components/layout/SocialFloat";
 
 export default async function LocaleLayout({
   children,
@@ -35,6 +36,7 @@ export default async function LocaleLayout({
           <Footer />
           <ChatBot />
           <ScrollToTop />
+          <SocialFloat />
           <LegalModals />
           <CookieConsent />
           <AutoDetectPreferences />
