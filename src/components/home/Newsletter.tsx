@@ -17,6 +17,14 @@ const HOTEL_CHAINS = [
   { name: "Radisson", logo: "/images/hotel-chains/radisson.svg" },
   { name: "Four Seasons", logo: "/images/hotel-chains/fourseasons.svg" },
   { name: "Shangri-La", logo: "/images/hotel-chains/shangri-la.svg" },
+  { name: "Ritz-Carlton", logo: "/images/hotel-chains/ritz-carlton.svg" },
+  { name: "InterContinental", logo: "/images/hotel-chains/intercontinental.svg" },
+  { name: "Holiday Inn", logo: "/images/hotel-chains/holiday-inn.svg" },
+  { name: "Sheraton", logo: "/images/hotel-chains/sheraton.svg" },
+  { name: "Westin", logo: "/images/hotel-chains/westin.svg" },
+  { name: "Mandarin Oriental", logo: "/images/hotel-chains/mandarin.svg" },
+  { name: "Kempinski", logo: "/images/hotel-chains/kempinski.svg" },
+  { name: "Novotel", logo: "/images/hotel-chains/novotel.svg" },
 ];
 
 export default function Newsletter() {
@@ -100,23 +108,25 @@ export default function Newsletter() {
             <div className="absolute left-0 top-0 bottom-0 w-20 bg-linear-to-r from-white to-transparent z-10" />
             <div className="absolute right-0 top-0 bottom-0 w-20 bg-linear-to-l from-white to-transparent z-10" />
 
-            <div className="flex animate-marquee items-center">
-              {["a", "b"].map((copy) =>
-                HOTEL_CHAINS.map((chain) => (
-                  <div
-                    key={`${copy}-${chain.name}`}
-                    className="flex-none px-8 sm:px-12 flex items-center justify-center"
-                  >
-                    <Image
-                      src={chain.logo}
-                      alt={chain.name}
-                      width={140}
-                      height={40}
-                      className="h-8 sm:h-10 w-auto opacity-30 grayscale hover:opacity-60 hover:grayscale-0 transition-all duration-300"
-                    />
-                  </div>
-                ))
-              )}
+            <div className="flex animate-marquee items-center w-max">
+              {["a", "b"].map((copy) => (
+                <div key={copy} className="flex shrink-0 items-center">
+                  {HOTEL_CHAINS.map((chain) => (
+                    <div
+                      key={`${copy}-${chain.name}`}
+                      className="flex-none px-8 sm:px-12 flex items-center justify-center"
+                    >
+                      <Image
+                        src={chain.logo}
+                        alt={chain.name}
+                        width={140}
+                        height={40}
+                        className="h-8 sm:h-10 w-auto opacity-30 grayscale hover:opacity-60 hover:grayscale-0 transition-all duration-300"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
         </div>
