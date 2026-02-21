@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchHotelRates, getHotelDetails } from "@/lib/liteapi";
+import { searchHotelRates, getHotelDetails, searchPlaces } from "@/lib/liteapi";
 
 interface RoomType {
   offerId: string;
@@ -38,6 +38,24 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // If no placeId provided, look it up from cityName
+    let placeId = body.placeId;
+    if (!placeId && body.cityName) {
+      try {
+        const placesResult = await searchPlaces(body.cityName);
+        if (placesResult.data?.length > 0) {
+          placeId = placesResult.data[0].placeId;
+        }
+      } catch (e) {
+        console.warn("[search] Failed to look up placeId for cityName:", body.cityName, e);
+      }
+    }
+
+    // If still no location identifier, return empty results
+    if (!placeId && !body.hotelIds?.length && !body.latitude && !body.countryCode) {
+      return NextResponse.json({ data: [] });
+    }
+
     // Build search params including new advanced filters
     const searchParams: Parameters<typeof searchHotelRates>[0] = {
       checkin: body.checkIn,
@@ -46,8 +64,7 @@ export async function POST(request: NextRequest) {
       children: body.children,
       currency: body.currency || "USD",
       guestNationality: body.nationality || "US",
-      placeId: body.placeId,
-      cityName: body.cityName,
+      placeId,
       countryCode: body.countryCode,
       latitude: body.latitude,
       longitude: body.longitude,

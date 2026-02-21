@@ -38,7 +38,7 @@ export default function HotelMap({ hotels, center, onHotelClick, compact }: Hote
 
       const map = new mb.Map({
         container: mapContainer.current!,
-        style: "mapbox://styles/mapbox/light-v11",
+        style: "mapbox://styles/mapbox/streets-v12",
         center: center
           ? [center.lng, center.lat]
           : hotels.length > 0
