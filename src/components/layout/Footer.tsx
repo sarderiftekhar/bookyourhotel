@@ -102,7 +102,7 @@ export default function Footer() {
                 <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center">
                   <MapPin size={15} className="text-accent-bright" />
                 </div>
-                Willett House, Queens Road West, London, UK
+                Plaistow, London, UK
               </li>
             </ul>
           </div>

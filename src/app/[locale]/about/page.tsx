@@ -200,7 +200,7 @@ export default function AboutPage() {
                     Unique Evolution Limited
                   </p>
                   <p className="text-xs text-text-muted">
-                    Willett House, Queens Road West, London, UK
+                    Plaistow, London, UK
                   </p>
                 </div>
               </div>

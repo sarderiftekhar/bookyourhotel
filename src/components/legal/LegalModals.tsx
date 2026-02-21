@@ -25,7 +25,7 @@ const COMPANY = {
   legal: "Unique Evolution Limited",
   brand: "BookYourHotel",
   email: "sales@uniqevo.co.uk",
-  address: "Willett House, Queens Road West, London, United Kingdom",
+  address: "Plaistow, London, United Kingdom",
   country: "United Kingdom",
   jurisdiction: "England and Wales",
 };

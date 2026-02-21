@@ -78,8 +78,7 @@ export default function LegalModal({
         {/* Footer */}
         <div className="px-6 py-3 border-t border-border bg-bg-cream/50 shrink-0">
           <p className="text-xs text-text-muted text-center">
-            Operated by Unique Evolution Limited &middot; Willett House, Queens
-            Road West, London, United Kingdom
+            Operated by Unique Evolution Limited &middot; Plaistow, London, United Kingdom
           </p>
         </div>
       </div>

@@ -178,7 +178,7 @@ export default function ContactPage() {
             {
               icon: MapPin,
               label: "Our Office",
-              value: "Willett House, Queens Road West, London, UK",
+              value: "Plaistow, London, UK",
               href: null,
             },
             {
