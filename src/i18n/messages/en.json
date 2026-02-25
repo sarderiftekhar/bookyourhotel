@@ -221,8 +221,10 @@
     "signUpError": "Could not create account. Please try again.",
     "google": "Continue with Google",
     "emailConfirmedTitle": "Email Verified!",
-    "emailConfirmedText": "Your email has been verified successfully. You can now sign in to your account and start booking hotels.",
-    "linkExpired": "This verification link has expired. Please sign up again to receive a new link."
+    "emailConfirmedText": "Your email has been verified successfully. You're now signed in and ready to book hotels.",
+    "linkExpired": "This verification link has expired. Please sign up again to receive a new link.",
+    "redirectingIn": "Redirecting to your account in {seconds}s...",
+    "goToAccount": "Go to My Account"
   },
   "account": {
     "myAccount": "My Account",

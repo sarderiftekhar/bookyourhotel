@@ -221,8 +221,10 @@
     "signUpError": "Konto konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
     "google": "Weiter mit Google",
     "emailConfirmedTitle": "E-Mail verifiziert!",
-    "emailConfirmedText": "Ihre E-Mail-Adresse wurde erfolgreich verifiziert. Sie können sich jetzt in Ihr Konto einloggen und mit der Hotelbuchung beginnen.",
-    "linkExpired": "Dieser Bestätigungslink ist abgelaufen. Bitte registrieren Sie sich erneut, um einen neuen Link zu erhalten."
+    "emailConfirmedText": "Ihre E-Mail-Adresse wurde erfolgreich verifiziert. Sie sind jetzt angemeldet und können Hotels buchen.",
+    "linkExpired": "Dieser Bestätigungslink ist abgelaufen. Bitte registrieren Sie sich erneut, um einen neuen Link zu erhalten.",
+    "redirectingIn": "Weiterleitung zu Ihrem Konto in {seconds}s...",
+    "goToAccount": "Zu Mein Konto"
   },
   "account": {
     "myAccount": "Mein Konto",

@@ -1,11 +1,29 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
-import { CheckCircle, LogIn } from "lucide-react";
+import { useRouter, Link } from "@/i18n/routing";
+import { CheckCircle, ArrowRight } from "lucide-react";
 
 export default function EmailConfirmedPage() {
   const t = useTranslations("auth");
+  const router = useRouter();
+  const [countdown, setCountdown] = useState(3);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          router.push("/account");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [router]);
 
   return (
     <div className="pt-20 min-h-screen bg-bg-cream/30 flex items-start justify-center px-4">
@@ -20,16 +38,20 @@ export default function EmailConfirmedPage() {
             {t("emailConfirmedTitle")}
           </h1>
 
-          <p className="text-sm text-text-muted mb-8 leading-relaxed">
+          <p className="text-sm text-text-muted mb-6 leading-relaxed">
             {t("emailConfirmedText")}
           </p>
 
+          <p className="text-xs text-text-muted mb-6">
+            {t("redirectingIn", { seconds: countdown })}
+          </p>
+
           <Link
-            href="/login"
+            href="/account"
             className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-accent hover:bg-accent-hover text-white text-sm font-semibold rounded-lg transition-all duration-200"
           >
-            <LogIn size={16} />
-            {t("signIn")}
+            {t("goToAccount")}
+            <ArrowRight size={16} />
           </Link>
         </div>
       </div>

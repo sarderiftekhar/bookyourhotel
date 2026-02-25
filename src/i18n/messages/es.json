@@ -221,8 +221,10 @@
     "signUpError": "No se pudo crear la cuenta. Por favor, inténtalo de nuevo.",
     "google": "Continuar con Google",
     "emailConfirmedTitle": "¡Correo verificado!",
-    "emailConfirmedText": "Tu correo electrónico ha sido verificado correctamente. Ahora puedes iniciar sesión en tu cuenta y comenzar a reservar hoteles.",
-    "linkExpired": "Este enlace de verificación ha expirado. Por favor, regístrate de nuevo para recibir un nuevo enlace."
+    "emailConfirmedText": "Tu correo electrónico ha sido verificado correctamente. Ya has iniciado sesión y estás listo para reservar hoteles.",
+    "linkExpired": "Este enlace de verificación ha expirado. Por favor, regístrate de nuevo para recibir un nuevo enlace.",
+    "redirectingIn": "Redirigiendo a tu cuenta en {seconds}s...",
+    "goToAccount": "Ir a Mi Cuenta"
   },
   "account": {
     "myAccount": "Mi Cuenta",
