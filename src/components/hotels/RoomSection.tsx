@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CalendarDays, Users, Search, Loader2, Minus, Plus } from "lucide-react";
-import { formatDate, getNightsCount } from "@/lib/utils";
+import { formatDate, getNightsCount, isRefundablePolicy } from "@/lib/utils";
 import { addDays, format } from "date-fns";
 import RoomTypeGroup from "./RoomTypeGroup";
 import DatePicker from "@/components/ui/DatePicker";
@@ -78,8 +78,7 @@ export default function RoomSection({
     if (cancellationFilter) {
       filtered = filtered.filter(
         (r) =>
-          r.cancellationPolicy?.refundableTag === "FREE_CANCELLATION" ||
-          r.cancellationPolicy?.refundableTag === "REFUNDABLE"
+          isRefundablePolicy(r.cancellationPolicy?.refundableTag)
       );
     }
 

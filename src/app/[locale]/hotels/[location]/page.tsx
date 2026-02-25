@@ -12,6 +12,7 @@ import SearchFilters, { FilterState } from "@/components/search/SearchFilters";
 import HotelGrid from "@/components/hotels/HotelGrid";
 import HotelMap from "@/components/hotels/HotelMap";
 import Spinner, { LoadingOverlay } from "@/components/ui/Spinner";
+import { isRefundablePolicy } from "@/lib/utils";
 import { useParams } from "next/navigation";
 
 interface HotelResult {
@@ -152,7 +153,7 @@ function HotelsPageInner() {
         if (h.minRate < filters.minPrice) return false;
         if (filters.maxPrice < 10000 && h.minRate > filters.maxPrice) return false;
       }
-      if (filters.freeCancellation && h.cancellationPolicy !== "FREE_CANCELLATION") {
+      if (filters.freeCancellation && !isRefundablePolicy(h.cancellationPolicy)) {
         return false;
       }
       if (filters.boardTypes.length > 0 && h.boardName && !filters.boardTypes.some((b) => h.boardName?.toLowerCase().includes(b.toLowerCase()))) {

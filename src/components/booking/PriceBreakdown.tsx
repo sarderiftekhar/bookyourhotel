@@ -18,7 +18,7 @@ import {
   ParkingCircle,
   ShieldCheck,
 } from "lucide-react";
-import { formatCurrency, formatDate, getNightsCount } from "@/lib/utils";
+import { formatCurrency, formatDate, getNightsCount, isRefundablePolicy } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 
 const FACILITY_ICONS: Array<{
@@ -90,8 +90,7 @@ export default function PriceBreakdown({
   const perNight = totalRate / (nights || 1);
   const topFacilities = hotelFacilities ? getTopFacilities(hotelFacilities) : [];
   const locationParts = [hotelAddress, hotelCity, hotelCountry].filter(Boolean);
-  const isFreeCancellation =
-    cancellationPolicy === "FREE_CANCELLATION" || cancellationPolicy === "REFUNDABLE";
+  const isFreeCancellation = isRefundablePolicy(cancellationPolicy);
 
   const totalGuests = (adults || 2) + (childrenCount || 0);
 

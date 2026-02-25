@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { MapPin, Star, Wifi, ChevronLeft, ChevronRight } from "lucide-react";
-import { formatCurrency, getStarRatingText } from "@/lib/utils";
+import { formatCurrency, getStarRatingText, isRefundablePolicy } from "@/lib/utils";
 import { usePreferencesStore } from "@/store/preferencesStore";
 import { useSearchStore } from "@/store/searchStore";
 import FavoriteButton from "@/components/hotels/FavoriteButton";
@@ -45,7 +45,7 @@ export default function HotelCard({ hotel }: HotelCardProps) {
 
   const displayCurrency = hotel.currency || currency;
   const ratingLabel = hotel.reviewScore ? (getStarRatingText(hotel.reviewScore) || getRatingLabel(hotel.reviewScore)) : "";
-  const isFreeCancellation = hotel.cancellationPolicy === "FREE_CANCELLATION";
+  const isFreeCancellation = isRefundablePolicy(hotel.cancellationPolicy);
 
   // Build image list: main_photo first, then hotelImages (deduplicated)
   const images: string[] = [];

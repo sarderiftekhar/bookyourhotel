@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Star } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import type { ChatHotel } from "@/store/chatStore";
+import { isRefundablePolicy } from "@/lib/utils";
 
 export default function HotelChatCard({ hotel }: { hotel: ChatHotel }) {
   return (
@@ -60,7 +61,7 @@ export default function HotelChatCard({ hotel }: { hotel: ChatHotel }) {
           )}
         </div>
 
-        {hotel.cancellationPolicy === "FREE_CANCELLATION" && (
+        {isRefundablePolicy(hotel.cancellationPolicy) && (
           <span className="text-[10px] text-success font-medium mt-0.5 block">
             Free cancellation
           </span>

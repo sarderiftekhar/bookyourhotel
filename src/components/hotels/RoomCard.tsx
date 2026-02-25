@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Users, Coffee, BedDouble, ShieldCheck, ShieldX, ChevronRight } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, isRefundablePolicy } from "@/lib/utils";
 
 interface RoomCardProps {
   room: {
@@ -23,8 +23,7 @@ interface RoomCardProps {
 
 export default function RoomCard({ room, onSelect }: RoomCardProps) {
   const t = useTranslations("hotel");
-  const isRefundable = room.cancellationPolicy?.refundableTag === "FREE_CANCELLATION" ||
-    room.cancellationPolicy?.refundableTag === "REFUNDABLE";
+  const isRefundable = isRefundablePolicy(room.cancellationPolicy?.refundableTag);
   const hasImage = room.images && room.images[0];
 
   return (

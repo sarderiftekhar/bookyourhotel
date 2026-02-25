@@ -71,3 +71,15 @@ export function generateGuestSummary(adults: number, children: number, rooms: nu
   parts.push(`${rooms} Room${rooms !== 1 ? "s" : ""}`);
   return parts.join(", ");
 }
+
+/**
+ * Check if a cancellation policy tag means refundable.
+ * LiteAPI uses different values in sandbox vs production:
+ * - Sandbox: "FREE_CANCELLATION", "REFUNDABLE", "NON_REFUNDABLE"
+ * - Production: "RFN" (refundable), "NRFN" (non-refundable)
+ */
+export function isRefundablePolicy(tag: string | undefined | null): boolean {
+  if (!tag) return false;
+  const upper = tag.toUpperCase();
+  return upper === "RFN" || upper === "FREE_CANCELLATION" || upper === "REFUNDABLE";
+}

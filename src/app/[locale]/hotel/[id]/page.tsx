@@ -30,7 +30,7 @@ import {
 import { useSearchStore } from "@/store/searchStore";
 import { useBookingStore } from "@/store/bookingStore";
 import { usePreferencesStore } from "@/store/preferencesStore";
-import { getStarRatingText, formatCurrency } from "@/lib/utils";
+import { getStarRatingText, formatCurrency, isRefundablePolicy } from "@/lib/utils";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import HotelGallery from "@/components/hotels/HotelGallery";
 import AmenitiesList from "@/components/hotels/AmenitiesList";
@@ -274,7 +274,7 @@ function HotelDetailPageInner() {
       checkOut: activeCheckOut,
       currency: room.currency,
       totalRate: room.retailRate,
-      cancellationPolicy: room.cancellationPolicy?.refundableTag || "NON_REFUNDABLE",
+      cancellationPolicy: room.cancellationPolicy?.refundableTag || "NRFN",
       maxOccupancy: room.maxOccupancy || 2,
       roomImage: room.images?.[0] || hotel.images?.[0] || "",
       adults: activeAdults,
