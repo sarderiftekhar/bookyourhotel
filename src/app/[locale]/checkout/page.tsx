@@ -2,20 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, usePathname } from "@/i18n/routing";
+import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useBookingStore } from "@/store/bookingStore";
+import { isRefundablePolicy } from "@/lib/utils";
 import GuestForm from "@/components/booking/GuestForm";
 import LiteAPIPaymentForm from "@/components/booking/LiteAPIPayment";
 import PriceBreakdown from "@/components/booking/PriceBreakdown";
 import Button from "@/components/ui/Button";
-import { ArrowLeft, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Loader2, CreditCard, Mail, FileCheck } from "lucide-react";
 import { GuestInfo } from "@/types/booking";
 
 type Step = "guest" | "payment";
 
 // Map LiteAPI error codes and HTTP statuses to user-friendly messages
 function getBookingErrorMessage(data: { code?: number; httpStatus?: number; error?: string }): string {
-  // LiteAPI application-level error codes (2xxx range)
   if (data.code) {
     switch (data.code) {
       case 2001:
@@ -51,7 +51,6 @@ function getBookingErrorMessage(data: { code?: number; httpStatus?: number; erro
     }
   }
 
-  // HTTP status-level fallbacks
   if (data.httpStatus) {
     switch (data.httpStatus) {
       case 400:
@@ -71,7 +70,6 @@ function getBookingErrorMessage(data: { code?: number; httpStatus?: number; erro
     }
   }
 
-  // Fallback to raw error or generic message
   return data.error || "Something went wrong. Please try again.";
 }
 
@@ -91,19 +89,19 @@ export default function CheckoutPage() {
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",
+    phone: "+44 ",
     specialRequests: "",
   });
   const [errors, setErrors] = useState<Partial<Record<keyof GuestInfo, string>>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   // Prebook data
   const [secretKey, setSecretKey] = useState<string | null>(null);
   const [prebookId, setPrebookId] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
 
-  // Wait for client hydration before reading store
   if (!mounted) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center">
@@ -112,7 +110,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // Redirect if no room selected
   if (!booking.offerId) {
     return (
       <div className="pt-20 min-h-screen flex flex-col items-center justify-center gap-4">
@@ -121,6 +118,8 @@ export default function CheckoutPage() {
       </div>
     );
   }
+
+  const isNonRefundable = !isRefundablePolicy(booking.cancellationPolicy);
 
   const BLOCKED_EMAIL_DOMAINS = [
     "mailinator.com", "guerrillamail.com", "tempmail.com", "throwaway.email",
@@ -143,16 +142,23 @@ export default function CheckoutPage() {
         newErrors.email = "Please use a real email address (disposable emails are not accepted)";
       }
     }
-    if (!guestInfo.phone.trim()) newErrors.phone = "Required";
+    // Extract just the local number part for validation
+    const phoneLocal = guestInfo.phone.replace(/^\+\d{1,4}\s*/, "").trim();
+    if (!phoneLocal) newErrors.phone = "Required";
     else {
-      const digits = guestInfo.phone.replace(/\D/g, "");
-      if (digits.length < 7) newErrors.phone = "Phone number is too short";
+      const digits = phoneLocal.replace(/\D/g, "");
+      if (digits.length < 6) newErrors.phone = "Phone number is too short";
       else if (digits.length > 15) newErrors.phone = "Phone number is too long";
-      else if (!/^[+\d][\d\s\-().]+$/.test(guestInfo.phone.trim()))
-        newErrors.phone = "Invalid phone number format";
     }
+
+    if (!agreedToTerms) {
+      setError("Please agree to the Terms & Conditions before proceeding.");
+    } else {
+      setError(null);
+    }
+
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return Object.keys(newErrors).length === 0 && agreedToTerms;
   }
 
   async function handleProceedToPayment() {
@@ -161,7 +167,6 @@ export default function CheckoutPage() {
     setError(null);
 
     try {
-      // Prebook to lock the rate
       const prebookRes = await fetch("/api/booking/prebook", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -210,7 +215,6 @@ export default function CheckoutPage() {
         throw new Error("Payment setup failed. Please try again.");
       }
 
-      // Store guest info in sessionStorage for after payment redirect
       sessionStorage.setItem("byh_guest_info", JSON.stringify({
         firstName: guestInfo.firstName,
         lastName: guestInfo.lastName,
@@ -230,8 +234,6 @@ export default function CheckoutPage() {
     }
   }
 
-  // Build the return URL for after payment
-  // pathname is like "/checkout", we need the full origin + locale path to /booking/confirm
   const returnUrl = typeof window !== "undefined"
     ? `${window.location.origin}${pathname.replace("/checkout", "/booking/confirm")}`
     : "";
@@ -249,7 +251,7 @@ export default function CheckoutPage() {
               router.back();
             }
           }}
-          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-accent transition-colors mb-6"
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-accent transition-colors mb-6 cursor-pointer"
         >
           <ArrowLeft size={16} />
           Back
@@ -292,7 +294,70 @@ export default function CheckoutPage() {
                   guestInfo={guestInfo}
                   onChange={setGuestInfo}
                   errors={errors}
+                  isNonRefundable={isNonRefundable}
                 />
+
+                {/* What happens next */}
+                <div className="bg-white rounded-xl border border-border p-6">
+                  <h3 className="text-base font-semibold text-text-primary mb-4">What happens next?</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <CreditCard size={16} className="text-accent" />
+                      </div>
+                      <p className="text-sm text-text-secondary leading-relaxed">
+                        After entering your details, you&apos;ll be taken to our secure payment page to complete your booking.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Mail size={16} className="text-accent" />
+                      </div>
+                      <p className="text-sm text-text-secondary leading-relaxed">
+                        You&apos;ll receive a booking confirmation email with your reservation details and hotel confirmation code.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <FileCheck size={16} className="text-accent" />
+                      </div>
+                      <p className="text-sm text-text-secondary leading-relaxed">
+                        Present your booking confirmation (printed or digital) and a valid photo ID at the hotel front desk during check-in.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Terms & Conditions */}
+                <div className="bg-white rounded-xl border border-border p-6">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => {
+                        setAgreedToTerms(e.target.checked);
+                        if (e.target.checked && error?.includes("Terms")) setError(null);
+                      }}
+                      className="mt-1.5 w-5 h-5 rounded border-border text-accent focus:ring-accent/30 accent-(--color-accent) cursor-pointer"
+                    />
+                    <span className="text-sm text-text-secondary leading-relaxed">
+                      I have read and agree to the{" "}
+                      <Link href="/terms" target="_blank" className="text-accent hover:underline font-medium">
+                        Terms & Conditions
+                      </Link>
+                      {" "}and{" "}
+                      <Link href="/privacy" target="_blank" className="text-accent hover:underline font-medium">
+                        Privacy Policy
+                      </Link>
+                      . I understand that my personal data will be processed in accordance with the privacy policy.
+                      {isNonRefundable && (
+                        <span className="text-warning font-medium">
+                          {" "}I acknowledge this booking is non-refundable.
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                </div>
 
                 {error && (
                   <div className="p-4 bg-red-50 border border-error/20 rounded-lg text-sm text-error">
@@ -345,6 +410,9 @@ export default function CheckoutPage() {
               currency={booking.currency}
               totalRate={booking.totalRate}
               cancellationPolicy={booking.cancellationPolicy}
+              cancellationDeadline={booking.cancellationDeadline}
+              checkinTime={booking.checkinTime}
+              checkoutTime={booking.checkoutTime}
               roomImage={booking.roomImage}
               adults={booking.adults}
               children={booking.children}

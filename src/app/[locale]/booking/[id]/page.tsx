@@ -51,13 +51,17 @@ export default function BookingConfirmationPage() {
           bookingId={bookingId}
           hotelName={(booking?.hotelName as string) || "Hotel"}
           roomName={((booking?.bookedRooms as Array<Record<string, unknown>>)?.[0]?.roomType as Record<string, unknown>)?.name as string || "Room"}
+          boardName={((booking?.bookedRooms as Array<Record<string, unknown>>)?.[0]?.roomType as Record<string, unknown>)?.boardName as string || ""}
           checkIn={(booking?.checkin as string) || ""}
           checkOut={(booking?.checkout as string) || ""}
           guestName={`${(booking?.firstName as string) || ""} ${(booking?.lastName as string) || ""}`.trim() || "Guest"}
           email={(booking?.email as string) || ""}
+          phone={(booking?.phone as string) || ""}
           currency={(booking?.currency as string) || "USD"}
           totalRate={(booking?.price as number) || 0}
           hotelConfirmationCode={booking?.hotelConfirmationCode as string | undefined}
+          cancellationPolicy={(booking?.cancellationPolicies as Record<string, unknown>)?.refundableTag as string || ""}
+          guests={(booking?.guests as number) || 0}
         />
 
         {/* Create account prompt for non-authenticated users */}

@@ -74,6 +74,12 @@ interface RoomData {
   images?: string[];
   cancellationPolicy?: {
     refundableTag?: string;
+    cancelPolicyInfos?: Array<{
+      cancelTime?: string;
+      amount?: number;
+      currency?: string;
+      type?: string;
+    }>;
   };
 }
 
@@ -275,6 +281,9 @@ function HotelDetailPageInner() {
       currency: room.currency,
       totalRate: room.retailRate,
       cancellationPolicy: room.cancellationPolicy?.refundableTag || "NRFN",
+      cancellationDeadline: room.cancellationPolicy?.cancelPolicyInfos?.[0]?.cancelTime || "",
+      checkinTime: hotel.checkinTime || "15:00",
+      checkoutTime: hotel.checkoutTime || "11:00",
       maxOccupancy: room.maxOccupancy || 2,
       roomImage: room.images?.[0] || hotel.images?.[0] || "",
       adults: activeAdults,

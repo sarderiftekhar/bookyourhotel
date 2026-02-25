@@ -17,6 +17,9 @@ import {
   Bath,
   ParkingCircle,
   ShieldCheck,
+  Clock,
+  Info,
+  Banknote,
 } from "lucide-react";
 import { formatCurrency, formatDate, getNightsCount, isRefundablePolicy } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
@@ -36,6 +39,23 @@ const FACILITY_ICONS: Array<{
   { keywords: ["shuttle", "airport"], icon: Car, label: "Shuttle" },
 ];
 
+const BOARD_DESCRIPTIONS: Record<string, string> = {
+  "room only": "No meals included",
+  "bed and breakfast": "Breakfast included",
+  "half board": "Breakfast & dinner included",
+  "full board": "All meals included",
+  "all inclusive": "All meals, drinks & activities included",
+  "self catering": "Kitchen facilities available",
+};
+
+function getBoardDescription(boardName: string): string | undefined {
+  const lower = boardName.toLowerCase();
+  for (const [key, desc] of Object.entries(BOARD_DESCRIPTIONS)) {
+    if (lower.includes(key)) return desc;
+  }
+  return undefined;
+}
+
 function getTopFacilities(facilities: string[], max = 4) {
   const result: { icon: React.ElementType; label: string }[] = [];
   for (const entry of FACILITY_ICONS) {
@@ -46,6 +66,23 @@ function getTopFacilities(facilities: string[], max = 4) {
     if (hasIt) result.push({ icon: entry.icon, label: entry.label });
   }
   return result;
+}
+
+function formatCancellationDeadline(deadline: string): string {
+  if (!deadline) return "";
+  try {
+    const d = new Date(deadline);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
 }
 
 interface PriceBreakdownProps {
@@ -62,6 +99,9 @@ interface PriceBreakdownProps {
   currency: string;
   totalRate: number;
   cancellationPolicy: string;
+  cancellationDeadline?: string;
+  checkinTime?: string;
+  checkoutTime?: string;
   roomImage: string;
   adults?: number;
   children?: number;
@@ -81,6 +121,9 @@ export default function PriceBreakdown({
   currency,
   totalRate,
   cancellationPolicy,
+  cancellationDeadline,
+  checkinTime,
+  checkoutTime,
   roomImage,
   adults,
   children: childrenCount,
@@ -91,6 +134,8 @@ export default function PriceBreakdown({
   const topFacilities = hotelFacilities ? getTopFacilities(hotelFacilities) : [];
   const locationParts = [hotelAddress, hotelCity, hotelCountry].filter(Boolean);
   const isFreeCancellation = isRefundablePolicy(cancellationPolicy);
+  const boardDesc = getBoardDescription(boardName);
+  const deadlineFormatted = cancellationDeadline ? formatCancellationDeadline(cancellationDeadline) : "";
 
   const totalGuests = (adults || 2) + (childrenCount || 0);
 
@@ -143,7 +188,12 @@ export default function PriceBreakdown({
             <span className="text-sm font-medium text-text-primary">{roomName}</span>
           </div>
           {boardName && (
-            <Badge className="text-xs">{boardName}</Badge>
+            <div>
+              <Badge className="text-xs">{boardName}</Badge>
+              {boardDesc && (
+                <p className="text-[11px] text-text-muted mt-1">{boardDesc}</p>
+              )}
+            </div>
           )}
         </div>
 
@@ -152,12 +202,25 @@ export default function PriceBreakdown({
           <div className="flex items-center gap-2 text-sm text-text-secondary">
             <Calendar size={14} className="text-accent shrink-0" />
             <span>
-              {formatDate(checkIn, "MMM dd")} — {formatDate(checkOut, "MMM dd")}
+              {formatDate(checkIn, "MMM dd, yyyy")} — {formatDate(checkOut, "MMM dd, yyyy")}
             </span>
             <span className="text-text-muted text-xs">
               ({nights} night{nights !== 1 ? "s" : ""})
             </span>
           </div>
+
+          {/* Check-in / Check-out times */}
+          {(checkinTime || checkoutTime) && (
+            <div className="flex items-center gap-2 text-sm text-text-secondary">
+              <Clock size={14} className="text-accent shrink-0" />
+              <span className="text-xs">
+                {checkinTime && <>Check-in from <strong>{checkinTime}</strong></>}
+                {checkinTime && checkoutTime && <> &middot; </>}
+                {checkoutTime && <>Check-out by <strong>{checkoutTime}</strong></>}
+              </span>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 text-sm text-text-secondary">
             <Users size={14} className="text-accent shrink-0" />
             <span>
@@ -215,14 +278,30 @@ export default function PriceBreakdown({
           </div>
         </div>
 
+        {/* Currency notice */}
+        <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
+          <Banknote size={12} className="shrink-0" />
+          <span>You will be charged in <strong>{currency}</strong></span>
+        </div>
+
         {/* Cancellation Policy */}
-        <div className="pt-1">
-          <p className="text-xs text-text-muted mb-1">{t("cancellationPolicy")}:</p>
+        <div className="border-t border-border pt-4">
+          <p className="text-xs text-text-muted mb-1.5">{t("cancellationPolicy")}:</p>
           <Badge
             variant={isFreeCancellation ? "success" : "warning"}
           >
             {isFreeCancellation ? "Free Cancellation" : "Non-Refundable"}
           </Badge>
+          {isFreeCancellation && deadlineFormatted && (
+            <p className="text-[11px] text-success mt-1.5">
+              Free cancellation until {deadlineFormatted}
+            </p>
+          )}
+          {!isFreeCancellation && (
+            <p className="text-[11px] text-warning mt-1.5">
+              This booking is non-refundable. No refund will be issued if cancelled.
+            </p>
+          )}
         </div>
 
         {/* Security badge */}

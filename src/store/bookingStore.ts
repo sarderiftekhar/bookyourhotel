@@ -21,6 +21,9 @@ interface BookingState {
   clientSecret: string | null;
   transactionId: string | null;
   cancellationPolicy: string;
+  cancellationDeadline: string;
+  checkinTime: string;
+  checkoutTime: string;
   maxOccupancy: number;
   roomImage: string;
   adults: number;
@@ -42,6 +45,9 @@ interface BookingState {
     currency: string;
     totalRate: number;
     cancellationPolicy: string;
+    cancellationDeadline: string;
+    checkinTime: string;
+    checkoutTime: string;
     maxOccupancy: number;
     roomImage: string;
     adults: number;
@@ -70,6 +76,9 @@ export const useBookingStore = create<BookingState>()((set) => ({
   clientSecret: null,
   transactionId: null,
   cancellationPolicy: "",
+  cancellationDeadline: "",
+  checkinTime: "",
+  checkoutTime: "",
   maxOccupancy: 2,
   roomImage: "",
   adults: 2,
@@ -104,6 +113,9 @@ export const useBookingStore = create<BookingState>()((set) => ({
       clientSecret: null,
       transactionId: null,
       cancellationPolicy: "",
+      cancellationDeadline: "",
+      checkinTime: "",
+      checkoutTime: "",
       maxOccupancy: 2,
       roomImage: "",
       adults: 2,
