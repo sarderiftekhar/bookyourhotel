@@ -5,30 +5,30 @@ import { useTranslations } from "next-intl";
 import SearchWidget from "@/components/search/SearchWidget";
 
 const SLIDES = [
-  { city: "Dubai",       letter: "D", src: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1920&q=80" },
-  { city: "Paris",       letter: "P", src: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1920&q=80" },
-  { city: "New York",    letter: "N", src: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=1920&q=80" },
-  { city: "Tokyo",       letter: "T", src: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920&q=80" },
-  { city: "London",      letter: "L", src: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1920&q=80" },
-  { city: "Istanbul",    letter: "I", src: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=1920&q=80" },
-  { city: "Singapore",   letter: "S", src: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1920&q=80" },
-  { city: "Rome",        letter: "R", src: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1920&q=80" },
-  { city: "Barcelona",   letter: "B", src: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=1920&q=80" },
-  { city: "Bangkok",     letter: "B", src: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=1920&q=80" },
-  { city: "Sydney",      letter: "S", src: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1920&q=80" },
-  { city: "Maldives",    letter: "M", src: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=1920&q=80" },
-  { city: "Santorini",   letter: "S", src: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=1920&q=80" },
-  { city: "Bali",        letter: "B", src: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1920&q=80" },
-  { city: "Rio",         letter: "R", src: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1920&q=80" },
-  { city: "Cape Town",   letter: "C", src: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=1920&q=80" },
-  { city: "Amsterdam",   letter: "A", src: "https://images.unsplash.com/photo-1534351590666-13e3e96b5571?w=1920&q=80" },
-  { city: "Hong Kong",   letter: "H", src: "https://images.unsplash.com/photo-1536599018102-9f803c140fc1?w=1920&q=80" },
-  { city: "Prague",      letter: "P", src: "https://images.unsplash.com/photo-1519677100203-a0e668c92439?w=1920&q=80" },
-  { city: "Vienna",      letter: "V", src: "https://images.unsplash.com/photo-1516550893923-42d28e5677af?w=1920&q=80" },
-  { city: "Marrakech",   letter: "M", src: "https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=1920&q=80" },
-  { city: "Lisbon",      letter: "L", src: "https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=1920&q=80" },
-  { city: "Athens",      letter: "A", src: "https://images.unsplash.com/photo-1555993539-1732b0258235?w=1920&q=80" },
-  { city: "Miami",       letter: "M", src: "https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?w=1920&q=80" },
+  { city: "Dubai",       letter: "D", src: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1920&q=80", gradient: "linear-gradient(135deg, #c2842f 0%, #1a1a2e 100%)" },
+  { city: "Paris",       letter: "P", src: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1920&q=80", gradient: "linear-gradient(135deg, #4a6fa5 0%, #2d2d44 100%)" },
+  { city: "New York",    letter: "N", src: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=1920&q=80", gradient: "linear-gradient(135deg, #3a3a5c 0%, #1a1a2e 100%)" },
+  { city: "Tokyo",       letter: "T", src: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920&q=80", gradient: "linear-gradient(135deg, #e74c6f 0%, #2d1b4e 100%)" },
+  { city: "London",      letter: "L", src: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1920&q=80", gradient: "linear-gradient(135deg, #5b7ea1 0%, #2a2a3d 100%)" },
+  { city: "Istanbul",    letter: "I", src: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=1920&q=80", gradient: "linear-gradient(135deg, #c17f3e 0%, #1e3a5f 100%)" },
+  { city: "Singapore",   letter: "S", src: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1920&q=80", gradient: "linear-gradient(135deg, #2ec4b6 0%, #1a1a3e 100%)" },
+  { city: "Rome",        letter: "R", src: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1920&q=80", gradient: "linear-gradient(135deg, #c9a96e 0%, #3d2b1f 100%)" },
+  { city: "Barcelona",   letter: "B", src: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=1920&q=80", gradient: "linear-gradient(135deg, #e07b4c 0%, #1a2744 100%)" },
+  { city: "Bangkok",     letter: "B", src: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=1920&q=80", gradient: "linear-gradient(135deg, #d4a843 0%, #2b1a2e 100%)" },
+  { city: "Sydney",      letter: "S", src: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1920&q=80", gradient: "linear-gradient(135deg, #4fa8d1 0%, #1a2a3e 100%)" },
+  { city: "Maldives",    letter: "M", src: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=1920&q=80", gradient: "linear-gradient(135deg, #00bcd4 0%, #004d5c 100%)" },
+  { city: "Santorini",   letter: "S", src: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=1920&q=80", gradient: "linear-gradient(135deg, #4a90d9 0%, #2a1a3e 100%)" },
+  { city: "Bali",        letter: "B", src: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1920&q=80", gradient: "linear-gradient(135deg, #4caf50 0%, #1a3a2e 100%)" },
+  { city: "Rio",         letter: "R", src: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1920&q=80", gradient: "linear-gradient(135deg, #66bb6a 0%, #1a2e3a 100%)" },
+  { city: "Cape Town",   letter: "C", src: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=1920&q=80", gradient: "linear-gradient(135deg, #5c9ead 0%, #2a2a44 100%)" },
+  { city: "Amsterdam",   letter: "A", src: "https://images.unsplash.com/photo-1468436139062-f60a71c5c892?w=1920&q=80", gradient: "linear-gradient(135deg, #5b8c5a 0%, #2a3a4e 100%)" },
+  { city: "Hong Kong",   letter: "H", src: "https://images.unsplash.com/photo-1536599018102-9f803c140fc1?w=1920&q=80", gradient: "linear-gradient(135deg, #e65100 0%, #1a1a3e 100%)" },
+  { city: "Prague",      letter: "P", src: "https://images.unsplash.com/photo-1519677100203-a0e668c92439?w=1920&q=80", gradient: "linear-gradient(135deg, #a1887f 0%, #2a2a3e 100%)" },
+  { city: "Vienna",      letter: "V", src: "https://images.unsplash.com/photo-1516550893923-42d28e5677af?w=1920&q=80", gradient: "linear-gradient(135deg, #bcaaa4 0%, #2d2d44 100%)" },
+  { city: "Marrakech",   letter: "M", src: "https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=1920&q=80", gradient: "linear-gradient(135deg, #d4843e 0%, #3e1a1a 100%)" },
+  { city: "Lisbon",      letter: "L", src: "https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=1920&q=80", gradient: "linear-gradient(135deg, #e8b960 0%, #2a3a4e 100%)" },
+  { city: "Athens",      letter: "A", src: "https://images.unsplash.com/photo-1555993539-1732b0258235?w=1920&q=80", gradient: "linear-gradient(135deg, #8d6e63 0%, #1a2a3e 100%)" },
+  { city: "Miami",       letter: "M", src: "https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?w=1920&q=80", gradient: "linear-gradient(135deg, #ff7043 0%, #1a3a4e 100%)" },
 ];
 
 const NUM = SLIDES.length;
@@ -40,6 +40,7 @@ export default function Hero() {
   const [animating, setAnimating] = useState(false);
   const [diff, setDiff] = useState(0);           // drag pixel diff
   const [dragging, setDragging] = useState(false);
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   const contRef = useRef<HTMLDivElement>(null);
   const startX = useRef(0);
@@ -48,6 +49,17 @@ export default function Hero() {
   const tmRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const curRef = useRef(0);
   const diffRef = useRef(0);
+
+  /* ---------- preload images & detect failures ---------- */
+  useEffect(() => {
+    SLIDES.forEach((slide) => {
+      const img = new Image();
+      img.src = slide.src;
+      img.onerror = () => {
+        setFailedImages((prev) => new Set(prev).add(slide.src));
+      };
+    });
+  }, []);
 
   useEffect(() => { curRef.current = cur; }, [cur]);
   useEffect(() => { diffRef.current = diff; }, [diff]);
@@ -193,15 +205,21 @@ export default function Hero() {
                   left: `${(i * 100) / NUM}%`,
                 }}
               >
-                {/* Background image — same image visible behind dark overlay */}
+                {/* Background — gradient fallback + image on top */}
                 <div
                   className="absolute inset-0"
-                  style={{
-                    backgroundImage: `url(${slide.src})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
+                  style={{ background: slide.gradient }}
                 />
+                {!failedImages.has(slide.src) && (
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `url(${slide.src})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  />
+                )}
 
                 {/* Dark overlay — subtle tint so city text + letter cutout stay readable */}
                 <div
@@ -219,7 +237,7 @@ export default function Hero() {
                 >
                   <span
                     style={{
-                      backgroundImage: `url(${slide.src})`,
+                      backgroundImage: failedImages.has(slide.src) ? slide.gradient : `url(${slide.src})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                       WebkitBackgroundClip: "text",
@@ -231,7 +249,7 @@ export default function Hero() {
                       fontFamily: "var(--font-playfair)",
                       transform: `translate3d(${diff / 60}px, -8%, 0)`,
                       transition: trans,
-                              userSelect: "none",
+                      userSelect: "none",
                     }}
                   >
                     {slide.letter}
