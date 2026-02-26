@@ -25,6 +25,9 @@ import {
   AlertTriangle,
   X,
   CheckCircle,
+  MapPin,
+  Star,
+  Globe,
 } from "lucide-react";
 import { formatCurrency, formatDate, isRefundablePolicy } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
@@ -43,6 +46,12 @@ interface BookingData {
   currency: string;
   price: number;
   guests?: number;
+  hotelAddress?: string;
+  hotelCity?: string;
+  hotelCountry?: string;
+  hotelPhone?: string;
+  hotelEmail?: string;
+  hotelStarRating?: number;
   bookedRooms?: Array<{
     roomType?: {
       name?: string;
@@ -79,6 +88,12 @@ export default function ManageBookingPage() {
     currency: "GBP",
     price: 1247.50,
     guests: 2,
+    hotelAddress: "150 Piccadilly",
+    hotelCity: "London",
+    hotelCountry: "United Kingdom",
+    hotelPhone: "+44 20 7493 8181",
+    hotelEmail: "reservations@theritzlondon.com",
+    hotelStarRating: 5,
     bookedRooms: [{ roomType: { name: "Deluxe King Room", boardName: "Bed and Breakfast" } }],
     cancellationPolicies: {
       refundableTag: "RFN",
@@ -293,6 +308,13 @@ export default function ManageBookingPage() {
                   <div>
                     <p className="text-xs text-text-muted">{t("hotel")}</p>
                     <p className="font-medium text-text-primary">{booking.hotelName}</p>
+                    {booking.hotelStarRating && (
+                      <div className="flex items-center gap-0.5 mt-1">
+                        {Array.from({ length: booking.hotelStarRating }).map((_, i) => (
+                          <Star key={i} size={12} className="text-amber-400 fill-amber-400" />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 {roomName && (
@@ -325,6 +347,51 @@ export default function ManageBookingPage() {
                   </div>
                 )}
               </div>
+
+              {/* Hotel Location & Contact */}
+              {(booking.hotelAddress || booking.hotelCity || booking.hotelPhone || booking.hotelEmail) && (
+                <>
+                  <div className="border-t border-border" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {(booking.hotelAddress || booking.hotelCity) && (
+                      <div className="flex items-start gap-2.5">
+                        <MapPin size={16} className="text-accent shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-text-muted">{t("hotelLocation")}</p>
+                          <p className="font-medium text-text-primary">
+                            {booking.hotelAddress}
+                            {booking.hotelAddress && booking.hotelCity ? ", " : ""}
+                            {booking.hotelCity}
+                            {booking.hotelCountry ? `, ${booking.hotelCountry}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {booking.hotelPhone && (
+                      <div className="flex items-start gap-2.5">
+                        <Phone size={16} className="text-accent shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-text-muted">{t("hotelPhone")}</p>
+                          <a href={`tel:${booking.hotelPhone}`} className="font-medium text-accent hover:underline">
+                            {booking.hotelPhone}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    {booking.hotelEmail && (
+                      <div className="flex items-start gap-2.5">
+                        <Globe size={16} className="text-accent shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-text-muted">{t("hotelEmail")}</p>
+                          <a href={`mailto:${booking.hotelEmail}`} className="font-medium text-accent hover:underline break-all">
+                            {booking.hotelEmail}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
 
               <div className="border-t border-border" />
 

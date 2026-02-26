@@ -15,8 +15,10 @@ export async function POST(request: NextRequest) {
 
     console.log("Prebook response:", JSON.stringify(result, null, 2));
 
-    // Return sandbox flag so client knows whether to show payment form
-    return NextResponse.json({ ...result, isSandbox });
+    // Return sandbox flag and public key mode so client can configure payment SDK
+    // LiteAPI Payment SDK expects "sandbox" or "live" as the publicKey (not the actual key)
+    const publicKey = isSandbox ? "sandbox" : "live";
+    return NextResponse.json({ ...result, isSandbox, publicKey });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to prebook";
     console.error("Prebook error:", message);

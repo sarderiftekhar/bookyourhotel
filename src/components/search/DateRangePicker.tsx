@@ -47,7 +47,6 @@ export default function DateRangePicker() {
       } else {
         setDates(checkIn, format(day, "yyyy-MM-dd"));
         setSelecting("checkIn");
-        setIsOpen(false);
       }
     }
   }

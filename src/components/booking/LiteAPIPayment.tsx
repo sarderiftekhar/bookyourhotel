@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { CreditCard, Lock, Loader2 } from "lucide-react";
 
 interface LiteAPIPaymentProps {
+  publicKey: string;
   secretKey: string;
   transactionId: string;
   prebookId: string;
@@ -19,6 +20,7 @@ declare global {
 }
 
 export default function LiteAPIPaymentForm({
+  publicKey,
   secretKey,
   transactionId,
   prebookId,
@@ -47,9 +49,9 @@ export default function LiteAPIPaymentForm({
         }
 
         const config = {
-          publicKey: "sandbox",
+          publicKey,
           appearance: { theme: "flat" },
-          options: { business: { name: "ZZStay" } },
+          options: { business: { name: "BookYourHotel" } },
           targetElement: "#liteapi-payment-container",
           secretKey,
           returnUrl: `${returnUrl}?tid=${encodeURIComponent(transactionId)}&pid=${encodeURIComponent(prebookId)}`,
@@ -79,7 +81,7 @@ export default function LiteAPIPaymentForm({
         script.parentNode.removeChild(script);
       }
     };
-  }, [secretKey, transactionId, prebookId, returnUrl]);
+  }, [publicKey, secretKey, transactionId, prebookId, returnUrl]);
 
   return (
     <div className="bg-white rounded-xl border border-border p-6">

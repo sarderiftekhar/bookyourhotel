@@ -101,6 +101,7 @@ export default function CheckoutPage() {
   const [secretKey, setSecretKey] = useState<string | null>(null);
   const [prebookId, setPrebookId] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
+  const [publicKey, setPublicKey] = useState<string | null>(null);
 
   if (!mounted) {
     return (
@@ -210,6 +211,7 @@ export default function CheckoutPage() {
       // PRODUCTION MODE: Show payment form (LiteAPI Payment SDK)
       const secret = prebookData.data.secretKey;
       const txnId = prebookData.data.transactionId;
+      const pubKey = prebookData.publicKey;
 
       if (!secret) {
         throw new Error("Payment setup failed. Please try again.");
@@ -226,6 +228,7 @@ export default function CheckoutPage() {
       setPrebookId(id);
       setSecretKey(secret);
       setTransactionId(txnId);
+      setPublicKey(pubKey);
       setStep("payment");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -247,6 +250,7 @@ export default function CheckoutPage() {
             if (step === "payment") {
               setStep("guest");
               setSecretKey(null);
+              setPublicKey(null);
             } else {
               router.back();
             }
@@ -379,6 +383,7 @@ export default function CheckoutPage() {
             {step === "payment" && secretKey && prebookId && transactionId && (
               <>
                 <LiteAPIPaymentForm
+                  publicKey={publicKey || "sandbox"}
                   secretKey={secretKey}
                   transactionId={transactionId}
                   prebookId={prebookId}

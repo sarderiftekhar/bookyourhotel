@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBooking } from "@/lib/liteapi";
+import { getBooking, getHotelDetails } from "@/lib/liteapi";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify last name matches (case-insensitive)
-    const bookingLastName = (result.data as Record<string, unknown>).lastName as string;
+    const booking = result.data as Record<string, unknown>;
+    const bookingLastName = booking.lastName as string;
     if (
       !bookingLastName ||
       bookingLastName.toLowerCase().trim() !== lastName.toLowerCase().trim()
@@ -31,6 +32,28 @@ export async function POST(request: NextRequest) {
         { error: "Booking not found" },
         { status: 404 }
       );
+    }
+
+    // Fetch hotel details for location, address, contact info
+    const hotelId = booking.hotelId as string | undefined;
+    if (hotelId) {
+      try {
+        const hotelResult = await getHotelDetails(hotelId);
+        if (hotelResult?.data) {
+          const hotel = hotelResult.data as Record<string, unknown>;
+          booking.hotelAddress = hotel.address;
+          booking.hotelCity = hotel.city;
+          booking.hotelCountry = hotel.country;
+          booking.hotelPhone = hotel.telephone || hotel.phone;
+          booking.hotelEmail = hotel.email;
+          booking.hotelStarRating = hotel.starRating;
+          booking.hotelLatitude = hotel.latitude;
+          booking.hotelLongitude = hotel.longitude;
+        }
+      } catch (e) {
+        console.warn("Failed to fetch hotel details for booking:", e);
+        // Non-blocking — continue with booking data
+      }
     }
 
     return NextResponse.json(result);
