@@ -298,6 +298,7 @@
     "cancelSuccessTitle": "Reserva Cancelada",
     "cancelSuccessText": "Tu reserva ha sido cancelada. El reembolso se procesará en tu método de pago original en un plazo de 5 a 10 días hábiles.",
     "cancelError": "No se pudo cancelar la reserva. Por favor, inténtalo de nuevo o contacta con soporte.",
-    "nonRefundableNotice": "Esta reserva no es reembolsable. No se puede cancelar ni modificar. Si necesitas ayuda, por favor contacta con nuestro equipo de soporte."
+    "nonRefundableNotice": "Esta reserva no es reembolsable. No se puede cancelar ni modificar. Si necesitas ayuda, por favor contacta con nuestro equipo de soporte.",
+    "cancelDeadlineExpired": "El período de cancelación gratuita de esta reserva ha expirado. La cancelación ya no está disponible. Si necesitas ayuda, por favor contacta con nuestro equipo de soporte."
   }
 }

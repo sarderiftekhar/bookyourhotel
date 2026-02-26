@@ -298,6 +298,7 @@
     "cancelSuccessTitle": "Buchung Storniert",
     "cancelSuccessText": "Ihre Buchung wurde storniert. Eine Rückerstattung wird innerhalb von 5 bis 10 Werktagen auf Ihre ursprüngliche Zahlungsmethode veranlasst.",
     "cancelError": "Die Buchung konnte nicht storniert werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.",
-    "nonRefundableNotice": "Diese Buchung ist nicht erstattungsfähig. Sie kann weder storniert noch geändert werden. Wenn Sie Hilfe benötigen, wenden Sie sich bitte an unser Support-Team."
+    "nonRefundableNotice": "Diese Buchung ist nicht erstattungsfähig. Sie kann weder storniert noch geändert werden. Wenn Sie Hilfe benötigen, wenden Sie sich bitte an unser Support-Team.",
+    "cancelDeadlineExpired": "Der kostenlose Stornierungszeitraum für diese Buchung ist abgelaufen. Eine Stornierung ist nicht mehr möglich. Wenn Sie Hilfe benötigen, wenden Sie sich bitte an unser Support-Team."
   }
 }

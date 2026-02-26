@@ -162,6 +162,8 @@ export default function ManageBookingPage() {
   const cancellationTag = booking?.cancellationPolicies?.refundableTag || "";
   const isRefundable = isRefundablePolicy(cancellationTag);
   const cancelDeadline = booking?.cancellationPolicies?.cancelPolicyInfos?.[0]?.cancelTime;
+  const isCancelDeadlinePassed = cancelDeadline ? new Date(cancelDeadline) < new Date() : false;
+  const canCancel = isRefundable && !isCancelDeadlinePassed;
 
   const statusColor =
     booking?.status === "confirmed"
@@ -417,8 +419,8 @@ export default function ManageBookingPage() {
               </div>
             )}
 
-            {/* Cancel Booking Button — only for confirmed + refundable bookings */}
-            {booking.status === "confirmed" && isRefundable && !cancelSuccess && (
+            {/* Cancel Booking Button — only for confirmed + refundable + deadline not passed */}
+            {booking.status === "confirmed" && canCancel && !cancelSuccess && (
               <div className="bg-red-50/50 border border-red-100 rounded-xl p-5">
                 <div className="flex items-start gap-3">
                   <AlertTriangle size={18} className="text-red-500 shrink-0 mt-0.5" />
@@ -433,6 +435,18 @@ export default function ManageBookingPage() {
                       {t("cancelBookingBtn")}
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Cancellation deadline expired — was refundable but too late now */}
+            {booking.status === "confirmed" && isRefundable && isCancelDeadlinePassed && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <ShieldAlert size={18} className="text-warning shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-800 leading-relaxed">
+                    {t("cancelDeadlineExpired")}
+                  </p>
                 </div>
               </div>
             )}

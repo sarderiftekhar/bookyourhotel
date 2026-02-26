@@ -298,6 +298,7 @@
     "cancelSuccessTitle": "Réservation Annulée",
     "cancelSuccessText": "Votre réservation a été annulée. Un remboursement sera effectué sur votre moyen de paiement d'origine sous 5 à 10 jours ouvrés.",
     "cancelError": "Impossible d'annuler la réservation. Veuillez réessayer ou contacter le support.",
-    "nonRefundableNotice": "Cette réservation est non remboursable. Elle ne peut être ni annulée ni modifiée. Si vous avez besoin d'aide, veuillez contacter notre équipe de support."
+    "nonRefundableNotice": "Cette réservation est non remboursable. Elle ne peut être ni annulée ni modifiée. Si vous avez besoin d'aide, veuillez contacter notre équipe de support.",
+    "cancelDeadlineExpired": "La période d'annulation gratuite de cette réservation a expiré. L'annulation n'est plus disponible. Si vous avez besoin d'aide, veuillez contacter notre équipe de support."
   }
 }

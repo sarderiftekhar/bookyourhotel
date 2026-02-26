@@ -298,6 +298,7 @@
     "cancelSuccessTitle": "Booking Cancelled",
     "cancelSuccessText": "Your booking has been cancelled. A refund will be processed to your original payment method within 5-10 business days.",
     "cancelError": "Failed to cancel booking. Please try again or contact support.",
-    "nonRefundableNotice": "This booking is non-refundable. It cannot be cancelled or modified. If you need assistance, please contact our support team."
+    "nonRefundableNotice": "This booking is non-refundable. It cannot be cancelled or modified. If you need assistance, please contact our support team.",
+    "cancelDeadlineExpired": "The free cancellation period for this booking has expired. Cancellation is no longer available. If you need assistance, please contact our support team."
   }
 }
