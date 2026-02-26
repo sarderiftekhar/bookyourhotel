@@ -286,6 +286,18 @@
     "freeCancellation": "Free Cancellation",
     "nonRefundable": "Non-Refundable",
     "cancelBefore": "Free cancellation before {date}",
-    "needHelp": "Need help with your booking? Contact us at sales@uniqevo.co.uk"
+    "needHelp": "Need help with your booking? Contact us at sales@uniqevo.co.uk",
+    "cancelBookingTitle": "Need to cancel?",
+    "cancelBookingDesc": "This booking has free cancellation. You can cancel it and receive a full refund.",
+    "cancelBookingBtn": "Cancel Booking",
+    "cancelModalTitle": "Cancel this booking?",
+    "cancelModalText": "This action cannot be undone. You will receive a full refund to your original payment method.",
+    "keepBooking": "Keep Booking",
+    "confirmCancel": "Yes, Cancel",
+    "cancellingBooking": "Cancelling...",
+    "cancelSuccessTitle": "Booking Cancelled",
+    "cancelSuccessText": "Your booking has been cancelled. A refund will be processed to your original payment method within 5-10 business days.",
+    "cancelError": "Failed to cancel booking. Please try again or contact support.",
+    "nonRefundableNotice": "This booking is non-refundable. It cannot be cancelled or modified. If you need assistance, please contact our support team."
   }
 }

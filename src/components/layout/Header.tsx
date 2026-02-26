@@ -169,7 +169,7 @@ export default function Header() {
 
               {/* Dropdown Menu — pill-shaped */}
               <div
-                className={`absolute right-1/2 translate-x-1/2 top-full mt-3 w-40 bg-accent border border-white/20 rounded-[24px] shadow-2xl shadow-black/25 overflow-hidden transition-all duration-300 origin-top ${
+                className={`absolute right-1/2 translate-x-1/2 top-full mt-3 w-48 bg-accent border border-white/20 rounded-[24px] shadow-2xl shadow-black/25 overflow-hidden transition-all duration-300 origin-top ${
                   menuOpen
                     ? "opacity-100 scale-100 translate-y-0"
                     : "opacity-0 scale-95 -translate-y-2 pointer-events-none"

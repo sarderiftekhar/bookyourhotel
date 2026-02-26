@@ -286,6 +286,18 @@
     "freeCancellation": "Annulation Gratuite",
     "nonRefundable": "Non Remboursable",
     "cancelBefore": "Annulation gratuite avant le {date}",
-    "needHelp": "Besoin d'aide avec votre réservation ? Contactez-nous à sales@uniqevo.co.uk"
+    "needHelp": "Besoin d'aide avec votre réservation ? Contactez-nous à sales@uniqevo.co.uk",
+    "cancelBookingTitle": "Besoin d'annuler ?",
+    "cancelBookingDesc": "Cette réservation bénéficie de l'annulation gratuite. Vous pouvez l'annuler et recevoir un remboursement intégral.",
+    "cancelBookingBtn": "Annuler la Réservation",
+    "cancelModalTitle": "Annuler cette réservation ?",
+    "cancelModalText": "Cette action est irréversible. Vous recevrez un remboursement intégral sur votre moyen de paiement d'origine.",
+    "keepBooking": "Conserver la Réservation",
+    "confirmCancel": "Oui, Annuler",
+    "cancellingBooking": "Annulation en cours...",
+    "cancelSuccessTitle": "Réservation Annulée",
+    "cancelSuccessText": "Votre réservation a été annulée. Un remboursement sera effectué sur votre moyen de paiement d'origine sous 5 à 10 jours ouvrés.",
+    "cancelError": "Impossible d'annuler la réservation. Veuillez réessayer ou contacter le support.",
+    "nonRefundableNotice": "Cette réservation est non remboursable. Elle ne peut être ni annulée ni modifiée. Si vous avez besoin d'aide, veuillez contacter notre équipe de support."
   }
 }

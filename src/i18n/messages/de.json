@@ -286,6 +286,18 @@
     "freeCancellation": "Kostenlose Stornierung",
     "nonRefundable": "Nicht Erstattbar",
     "cancelBefore": "Kostenlose Stornierung vor dem {date}",
-    "needHelp": "Brauchen Sie Hilfe mit Ihrer Buchung? Kontaktieren Sie uns unter sales@uniqevo.co.uk"
+    "needHelp": "Brauchen Sie Hilfe mit Ihrer Buchung? Kontaktieren Sie uns unter sales@uniqevo.co.uk",
+    "cancelBookingTitle": "Müssen Sie stornieren?",
+    "cancelBookingDesc": "Diese Buchung hat kostenlose Stornierung. Sie können sie stornieren und eine vollständige Rückerstattung erhalten.",
+    "cancelBookingBtn": "Buchung Stornieren",
+    "cancelModalTitle": "Diese Buchung stornieren?",
+    "cancelModalText": "Diese Aktion kann nicht rückgängig gemacht werden. Sie erhalten eine vollständige Rückerstattung auf Ihre ursprüngliche Zahlungsmethode.",
+    "keepBooking": "Buchung Behalten",
+    "confirmCancel": "Ja, Stornieren",
+    "cancellingBooking": "Wird storniert...",
+    "cancelSuccessTitle": "Buchung Storniert",
+    "cancelSuccessText": "Ihre Buchung wurde storniert. Eine Rückerstattung wird innerhalb von 5 bis 10 Werktagen auf Ihre ursprüngliche Zahlungsmethode veranlasst.",
+    "cancelError": "Die Buchung konnte nicht storniert werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.",
+    "nonRefundableNotice": "Diese Buchung ist nicht erstattungsfähig. Sie kann weder storniert noch geändert werden. Wenn Sie Hilfe benötigen, wenden Sie sich bitte an unser Support-Team."
   }
 }

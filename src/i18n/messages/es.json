@@ -286,6 +286,18 @@
     "freeCancellation": "Cancelación Gratuita",
     "nonRefundable": "No Reembolsable",
     "cancelBefore": "Cancelación gratuita antes del {date}",
-    "needHelp": "¿Necesitas ayuda con tu reserva? Contáctanos en sales@uniqevo.co.uk"
+    "needHelp": "¿Necesitas ayuda con tu reserva? Contáctanos en sales@uniqevo.co.uk",
+    "cancelBookingTitle": "¿Necesitas cancelar?",
+    "cancelBookingDesc": "Esta reserva tiene cancelación gratuita. Puedes cancelarla y recibir un reembolso completo.",
+    "cancelBookingBtn": "Cancelar Reserva",
+    "cancelModalTitle": "¿Cancelar esta reserva?",
+    "cancelModalText": "Esta acción no se puede deshacer. Recibirás un reembolso completo en tu método de pago original.",
+    "keepBooking": "Mantener Reserva",
+    "confirmCancel": "Sí, Cancelar",
+    "cancellingBooking": "Cancelando...",
+    "cancelSuccessTitle": "Reserva Cancelada",
+    "cancelSuccessText": "Tu reserva ha sido cancelada. El reembolso se procesará en tu método de pago original en un plazo de 5 a 10 días hábiles.",
+    "cancelError": "No se pudo cancelar la reserva. Por favor, inténtalo de nuevo o contacta con soporte.",
+    "nonRefundableNotice": "Esta reserva no es reembolsable. No se puede cancelar ni modificar. Si necesitas ayuda, por favor contacta con nuestro equipo de soporte."
   }
 }

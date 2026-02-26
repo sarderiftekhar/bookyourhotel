@@ -19,9 +19,12 @@ import {
   BedDouble,
   Users,
   UtensilsCrossed,
-  Clock,
   ShieldCheck,
   ShieldAlert,
+  XCircle,
+  AlertTriangle,
+  X,
+  CheckCircle,
 } from "lucide-react";
 import { formatCurrency, formatDate, isRefundablePolicy } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
@@ -60,11 +63,37 @@ export default function ManageBookingPage() {
   const tBooking = useTranslations("booking");
   const searchParams = useSearchParams();
 
+  const isDemo = searchParams.get("demo") === "true";
+
+  const demoBooking: BookingData = {
+    bookingId: "BYH-2026-78432",
+    hotelName: "The Ritz London",
+    hotelConfirmationCode: "RITZ-90214",
+    status: "confirmed",
+    checkin: "2026-03-15",
+    checkout: "2026-03-18",
+    firstName: "James",
+    lastName: "Wilson",
+    email: "james.wilson@email.com",
+    phone: "+44 7911 123456",
+    currency: "GBP",
+    price: 1247.50,
+    guests: 2,
+    bookedRooms: [{ roomType: { name: "Deluxe King Room", boardName: "Bed and Breakfast" } }],
+    cancellationPolicies: {
+      refundableTag: "RFN",
+      cancelPolicyInfos: [{ cancelTime: "2026-03-13T23:59:00", amount: 0 }],
+    },
+  };
+
   const [lastName, setLastName] = useState(searchParams.get("lastName") || "");
   const [bookingId, setBookingId] = useState(searchParams.get("id") || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [booking, setBooking] = useState<BookingData | null>(null);
+  const [booking, setBooking] = useState<BookingData | null>(isDemo ? demoBooking : null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState(false);
 
   async function handleLookup(e: React.FormEvent) {
     e.preventDefault();
@@ -99,6 +128,32 @@ export default function ManageBookingPage() {
       setError(t("lookupError"));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCancel() {
+    if (!booking) return;
+    setCancelling(true);
+
+    try {
+      const res = await fetch(`/api/booking/${booking.bookingId}`, {
+        method: "PUT",
+      });
+
+      if (res.ok) {
+        setCancelSuccess(true);
+        setBooking({ ...booking, status: "cancelled" });
+        setShowCancelModal(false);
+      } else {
+        const data = await res.json();
+        setError(data.error || t("cancelError"));
+        setShowCancelModal(false);
+      }
+    } catch {
+      setError(t("cancelError"));
+      setShowCancelModal(false);
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -351,6 +406,49 @@ export default function ManageBookingPage() {
               </div>
             </div>
 
+            {/* Cancel Success Banner */}
+            {cancelSuccess && (
+              <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+                <CheckCircle size={18} className="text-success shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-green-800">{t("cancelSuccessTitle")}</p>
+                  <p className="text-xs text-green-700 mt-1 leading-relaxed">{t("cancelSuccessText")}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Cancel Booking Button — only for confirmed + refundable bookings */}
+            {booking.status === "confirmed" && isRefundable && !cancelSuccess && (
+              <div className="bg-red-50/50 border border-red-100 rounded-xl p-5">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle size={18} className="text-red-500 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-text-primary">{t("cancelBookingTitle")}</p>
+                    <p className="text-xs text-text-muted mt-1 leading-relaxed">{t("cancelBookingDesc")}</p>
+                    <button
+                      onClick={() => setShowCancelModal(true)}
+                      className="mt-3 flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <XCircle size={15} />
+                      {t("cancelBookingBtn")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Non-refundable notice */}
+            {booking.status === "confirmed" && !isRefundable && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <ShieldAlert size={18} className="text-warning shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-800 leading-relaxed">
+                    {t("nonRefundableNotice")}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex items-center justify-center gap-4">
               <button
@@ -373,6 +471,68 @@ export default function ManageBookingPage() {
             <p className="text-xs text-text-muted text-center leading-relaxed">
               {t("needHelp")}
             </p>
+          </div>
+        )}
+
+        {/* Cancel Confirmation Modal */}
+        {showCancelModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-2xl border border-border shadow-2xl max-w-md w-full p-6 sm:p-8">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle size={24} className="text-red-600" />
+                </div>
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  className="text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <h3
+                className="text-xl font-bold text-text-primary mb-2"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                {t("cancelModalTitle")}
+              </h3>
+              <p className="text-sm text-text-muted mb-2 leading-relaxed">
+                {t("cancelModalText")}
+              </p>
+
+              {/* Booking summary in modal */}
+              <div className="bg-bg-cream/50 rounded-lg p-3 mb-6 text-sm">
+                <p className="font-medium text-text-primary">{booking?.hotelName}</p>
+                <p className="text-text-muted text-xs mt-1">
+                  {booking?.checkin && formatDate(booking.checkin, "MMM dd")} — {booking?.checkout && formatDate(booking.checkout, "MMM dd, yyyy")}
+                </p>
+                <p className="font-semibold text-accent mt-1">
+                  {booking && formatCurrency(booking.price, booking.currency)}
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  disabled={cancelling}
+                  className="flex-1 py-2.5 text-sm font-medium border border-border rounded-lg bg-white hover:bg-bg-cream transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {t("keepBooking")}
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                  className="flex-1 py-2.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {cancelling ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <XCircle size={16} />
+                  )}
+                  {cancelling ? t("cancellingBooking") : t("confirmCancel")}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
