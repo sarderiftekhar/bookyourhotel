@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import SearchWidget from "@/components/search/SearchWidget";
 
@@ -44,14 +44,37 @@ const SLIDES = [
   { city: "Vancouver",     letter: "V", src: "/images/hero-slides/vancouver.jpg",     gradient: "linear-gradient(135deg, #4caf50 0%, #1a3a4e 100%)" },
 ];
 
-const NUM = SLIDES.length;
+/** Fisher-Yates shuffle — returns a new array */
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 const ANIM_MS = 750;
 
 export default function Hero() {
   const t = useTranslations("hero");
-  const [cur, setCur] = useState(0);
+
+  /* ---------- shuffled slides + infinite-loop extended array ---------- */
+  const slides = useMemo(() => shuffle(SLIDES), []);
+  const NUM = slides.length;
+  // Extended: [clone-of-last, ...real-slides, clone-of-first]
+  // Indices:   0               1..NUM         NUM+1
+  const extended = useMemo(
+    () => [slides[NUM - 1], ...slides, slides[0]],
+    [slides, NUM],
+  );
+  const TOTAL = extended.length; // NUM + 2
+
+  // cur is index in the extended array; starts at 1 (first real slide)
+  const [cur, setCur] = useState(1);
   const [animating, setAnimating] = useState(false);
-  const [diff, setDiff] = useState(0);           // drag pixel diff
+  const [jumping, setJumping] = useState(false); // instant snap — no CSS transition
+  const [diff, setDiff] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
@@ -59,59 +82,79 @@ export default function Hero() {
   const startX = useRef(0);
   const active = useRef(false);
   const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const tmRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const curRef = useRef(0);
+  const curRef = useRef(1);
   const diffRef = useRef(0);
 
   /* ---------- preload images & detect failures ---------- */
   useEffect(() => {
-    SLIDES.forEach((slide) => {
+    slides.forEach((slide) => {
       const img = new Image();
       img.src = slide.src;
       img.onerror = () => {
         setFailedImages((prev) => new Set(prev).add(slide.src));
       };
     });
-  }, []);
+  }, [slides]);
 
   useEffect(() => { curRef.current = cur; }, [cur]);
   useEffect(() => { diffRef.current = diff; }, [diff]);
+
+  /* ---------- snap to real position after reaching a clone ---------- */
+  const snapIfNeeded = useCallback((idx: number) => {
+    if (idx === 0) {
+      // Reached clone of last → snap to real last (NUM)
+      setJumping(true);
+      setCur(NUM);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setJumping(false);
+          setAnimating(false);
+        });
+      });
+    } else if (idx === NUM + 1) {
+      // Reached clone of first → snap to real first (1)
+      setJumping(true);
+      setCur(1);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setJumping(false);
+          setAnimating(false);
+        });
+      });
+    } else {
+      setAnimating(false);
+    }
+  }, [NUM]);
 
   /* ---------- auto-scroll ---------- */
   const resetAuto = useCallback(() => {
     if (autoRef.current) clearInterval(autoRef.current);
     autoRef.current = setInterval(() => {
       const c = curRef.current;
-      const next = c < NUM - 1 ? c + 1 : 0;
+      const next = c + 1; // always advance — clones handle the wrap
       setAnimating(true);
       setCur(next);
-      if (tmRef.current) clearTimeout(tmRef.current);
-      tmRef.current = setTimeout(() => setAnimating(false), ANIM_MS);
+      setTimeout(() => snapIfNeeded(next), ANIM_MS);
     }, 5000);
-  }, []);
+  }, [snapIfNeeded]);
 
   useEffect(() => {
     resetAuto();
-    return () => {
-      if (autoRef.current) clearInterval(autoRef.current);
-      if (tmRef.current) clearTimeout(tmRef.current);
-    };
+    return () => { if (autoRef.current) clearInterval(autoRef.current); };
   }, [resetAuto]);
 
   /* ---------- navigation ---------- */
   const goTo = useCallback((idx: number) => {
     if (animating) return;
-    if (idx < 0 || idx >= NUM) return;
     setAnimating(true);
     setCur(idx);
     setDiff(0);
-    if (tmRef.current) clearTimeout(tmRef.current);
-    tmRef.current = setTimeout(() => setAnimating(false), ANIM_MS);
+    setTimeout(() => snapIfNeeded(idx), ANIM_MS);
     resetAuto();
-  }, [animating, resetAuto]);
+  }, [animating, resetAuto, snapIfNeeded]);
 
-  const goRight = useCallback(() => { if (cur < NUM - 1) goTo(cur + 1); }, [cur, goTo]);
-  const goLeft  = useCallback(() => { if (cur > 0) goTo(cur - 1); }, [cur, goTo]);
+  const goRight = useCallback(() => goTo(cur + 1), [cur, goTo]);
+  const goLeft  = useCallback(() => goTo(cur - 1), [cur, goTo]);
 
   /* ---------- keyboard ---------- */
   useEffect(() => {
@@ -137,11 +180,7 @@ export default function Hero() {
   function onMove(e: React.MouseEvent | React.TouchEvent) {
     if (!active.current) return;
     const x = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const d = startX.current - x;
-    // clamp at edges
-    if (curRef.current === 0 && d < 0) return;
-    if (curRef.current === NUM - 1 && d > 0) return;
-    setDiff(d);
+    setDiff(startX.current - x);
   }
 
   function onUp() {
@@ -150,9 +189,9 @@ export default function Hero() {
     setDragging(false);
     const threshold = (contRef.current?.offsetWidth || 400) * 0.15;
     const d = diffRef.current;
-    if (d >= threshold && curRef.current < NUM - 1) {
+    if (d >= threshold) {
       goTo(curRef.current + 1);
-    } else if (d <= -threshold && curRef.current > 0) {
+    } else if (d <= -threshold) {
       goTo(curRef.current - 1);
     } else {
       setDiff(0);
@@ -162,13 +201,14 @@ export default function Hero() {
 
   /* ---------- compute transforms ---------- */
   const contW = contRef.current?.offsetWidth || 1;
-  // Slider track: each slide is 100/NUM % of total track width
-  // Track translate = -(cur * slideWidthPercent) - (dragPixels converted to percent of track)
-  const slidePercent = 100 / NUM;
+  const slidePercent = 100 / TOTAL;
   const dragPercent = (diff / contW) * slidePercent;
   const trackX = -(cur * slidePercent) - dragPercent;
 
-  const trans = dragging ? "none" : `transform ${ANIM_MS}ms ease-in-out`;
+  const trans = dragging || jumping ? "none" : `transform ${ANIM_MS}ms ease-in-out`;
+
+  // Map extended index → real slide index (0-based) for nav dots
+  const realIndex = cur === 0 ? NUM - 1 : cur === NUM + 1 ? 0 : cur - 1;
 
   /* ---------- marquee phrases ---------- */
   const phrases = [
@@ -200,22 +240,22 @@ export default function Hero() {
           onTouchMove={onMove}
           onTouchEnd={onUp}
         >
-          {/* Track — holds all slides side by side */}
+          {/* Track — holds all slides (with clones) side by side */}
           <div
             className="absolute top-0 left-0 h-full"
             style={{
-              width: `${NUM * 100}%`,
+              width: `${TOTAL * 100}%`,
               transform: `translate3d(${trackX}%, 0, 0)`,
               transition: trans,
             }}
           >
-            {SLIDES.map((slide, i) => (
+            {extended.map((slide, i) => (
               <div
-                key={slide.city}
+                key={`${slide.city}-${i}`}
                 className="absolute top-0 h-full overflow-hidden"
                 style={{
-                  width: `${100 / NUM}%`,
-                  left: `${(i * 100) / NUM}%`,
+                  width: `${100 / TOTAL}%`,
+                  left: `${(i * 100) / TOTAL}%`,
                 }}
               >
                 {/* Background — gradient fallback + image on top */}
@@ -280,7 +320,7 @@ export default function Hero() {
                       fontSize: "clamp(1.8rem, 8vw, 7rem)",
                       transform: `translate3d(${diff / 15}px, -40%, 0)`,
                       transition: trans,
-                              userSelect: "none",
+                      userSelect: "none",
                       textShadow: "0 2px 20px rgba(0,0,0,0.5), 0 4px 60px rgba(0,0,0,0.3)",
                     }}
                   >
@@ -307,12 +347,12 @@ export default function Hero() {
 
           {/* Navigation dots — compact bar style */}
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-1 z-15">
-            {SLIDES.map((slide, i) => (
+            {slides.map((slide, i) => (
               <button
                 key={slide.city}
-                onClick={(e) => { e.stopPropagation(); goTo(i); }}
+                onClick={(e) => { e.stopPropagation(); goTo(i + 1); }}
                 className={`h-1 rounded-full transition-all duration-300 ${
-                  i === cur
+                  i === realIndex
                     ? "w-6 bg-white"
                     : "w-1.5 bg-white/40 hover:bg-white/70"
                 }`}
