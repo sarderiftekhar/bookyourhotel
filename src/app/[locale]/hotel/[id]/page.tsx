@@ -139,7 +139,7 @@ function HotelDetailPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const hotelId = params.id as string;
-  const { checkIn, checkOut, adults, children, location } = useSearchStore();
+  const { checkIn, checkOut, adults, children, rooms: storeRooms, location } = useSearchStore();
   const { currency } = usePreferencesStore();
   const { setSelectedRoom } = useBookingStore();
 
@@ -172,7 +172,7 @@ function HotelDetailPageInner() {
         const [hotelRes, reviewsRes, ratesRes] = await Promise.all([
           fetch(`/api/hotels/${hotelId}`),
           fetch(`/api/reviews?hotelId=${hotelId}&limit=50`),
-          fetch(`/api/hotels/${hotelId}/rates?checkIn=${encodeURIComponent(ci)}&checkOut=${encodeURIComponent(co)}&adults=${adults}&children=${children || 0}&currency=${currency}`),
+          fetch(`/api/hotels/${hotelId}/rates?checkIn=${encodeURIComponent(ci)}&checkOut=${encodeURIComponent(co)}&adults=${adults}&children=${children || 0}&rooms=${storeRooms || 1}&currency=${currency}`),
         ]);
 
         const hotelData = await hotelRes.json();
@@ -357,7 +357,7 @@ function HotelDetailPageInner() {
     children: number;
   }) {
     const res = await fetch(
-      `/api/hotels/${hotelId}/rates?checkIn=${encodeURIComponent(params.checkIn)}&checkOut=${encodeURIComponent(params.checkOut)}&adults=${params.adults}&children=${params.children}&currency=${currency}`
+      `/api/hotels/${hotelId}/rates?checkIn=${encodeURIComponent(params.checkIn)}&checkOut=${encodeURIComponent(params.checkOut)}&adults=${params.adults}&children=${params.children}&rooms=${storeRooms || 1}&currency=${currency}`
     );
     const data = await res.json();
     const newRooms = parseRatesResponse(data);

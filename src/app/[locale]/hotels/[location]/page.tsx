@@ -34,6 +34,24 @@ interface HotelResult {
   longitude?: number;
 }
 
+/**
+ * Build LiteAPI occupancies array — one entry per room.
+ * Distributes adults evenly across rooms; children go in the first room.
+ */
+function buildOccupancies(adults: number, children: number, rooms: number) {
+  const r = Math.max(1, rooms);
+  const baseAdults = Math.floor(adults / r);
+  let extra = adults - baseAdults * r;
+  const childAges = children > 0 ? Array(children).fill(8) : undefined;
+
+  return Array.from({ length: r }, (_, i) => {
+    const a = baseAdults + (extra-- > 0 ? 1 : 0);
+    const occ: { adults: number; children?: number[] } = { adults: Math.max(1, a) };
+    if (i === 0 && childAges) occ.children = childAges;
+    return occ;
+  });
+}
+
 export default function HotelsPage() {
   return (
     <Suspense fallback={<div className="pt-20 min-h-screen flex items-center justify-center"><Spinner size={56} /></div>}>
@@ -112,7 +130,7 @@ function HotelsPageInner() {
           currency,
           placeId: placeId || undefined,
           cityName: placeId ? undefined : location,
-          occupancies: [{ adults, children: children > 0 ? Array(children).fill(8) : undefined }],
+          occupancies: buildOccupancies(adults, children, rooms),
         };
 
         if (starRatingFilter?.length) {

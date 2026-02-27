@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       longitude: body.longitude,
       hotelIds: body.hotelIds,
       occupancies: body.occupancies || [
-        { adults: body.adults || 2 },
+        { adults: body.adults || 2, children: body.children > 0 ? Array(body.children).fill(8) : undefined },
       ],
       includeHotelData: true,
       timeout: 8,
